@@ -1,9 +1,9 @@
 package com.cinelog.api.Controllers; // Define o pacote onde o Controller está localizado
 
 import com.cinelog.api.Entity.User;
-import com.cinelog.api.Models.APIError;
-import com.cinelog.api.Models.UserRequest;
-import com.cinelog.api.Models.UserResponse;
+import com.cinelog.api.DTO.APIError;
+import com.cinelog.api.DTO.UserRequest;
+import com.cinelog.api.DTO.UserResponse;
 import com.cinelog.api.Service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

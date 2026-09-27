@@ -1,6 +1,6 @@
 package com.cinelog.api.Exception;
 
-import com.cinelog.api.Models.APIError;
+import com.cinelog.api.DTO.APIError;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,8 +1,8 @@
 package com.cinelog.api.Service; // Define o pacote da camada intermediária que abriga as regras de negócio
 
 import com.cinelog.api.Entity.User;
-import com.cinelog.api.Models.UserRequest;
-import com.cinelog.api.Models.UserResponse;
+import com.cinelog.api.DTO.UserRequest;
+import com.cinelog.api.DTO.UserResponse;
 import com.cinelog.api.Repository.UserRepository;
 import com.cinelog.api.Exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;

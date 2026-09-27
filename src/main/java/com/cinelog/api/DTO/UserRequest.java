@@ -1,4 +1,4 @@
-package com.cinelog.api.Models; // Define o pacote onde ficam os modelos de transferência de dados (DTOs)
+package com.cinelog.api.DTO; // Define o pacote onde ficam os modelos de transferência de dados (DTOs)
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;

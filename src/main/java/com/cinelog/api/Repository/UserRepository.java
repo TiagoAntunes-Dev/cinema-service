@@ -14,4 +14,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * de banco de dados (save, findById, findAll, deleteById) gerados em tempo de execução pelo Spring Data JPA.
  */
 public interface UserRepository extends JpaRepository<User, Long> {
+    // Métodos como save(), findById(), findAll() e deleteById() já vêm prontos!
 }
