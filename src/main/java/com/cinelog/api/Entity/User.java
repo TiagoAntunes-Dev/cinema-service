@@ -11,6 +11,7 @@ import jakarta.persistence.*;
  * Se não usarmos isso, o banco tentaria criar uma tabela chamada "user", o que
  * muitas vezes dá erro de sintaxe, pois "USER" é uma palavra reservada em muitos bancos SQL.
  */
+@Entity
 @Table(name = "users")
 public class User {
 

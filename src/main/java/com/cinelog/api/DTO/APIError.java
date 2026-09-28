@@ -2,6 +2,7 @@ package com.cinelog.api.DTO; // Fica junto com os modelos pois é a estrutura da
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**

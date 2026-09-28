@@ -8,7 +8,9 @@ import jakarta.validation.constraints.NotBlank;
  * Record: Um recurso moderno do Java que cria classes imutáveis automaticamente.
  * Ele já gera por debaixo dos panos os métodos getters, construtor completo, equals, hashCode e toString.
  *
- * UserRequest: É o DTO de ENTRADA. Só serve para receber dados do cliente (JSON do Postman/Swagger).
+ * UserRequest: É o DTO de ENTRADA. Define exatamente os campos que a API aceita receber (JSON do Postman/Swagger).
+ *
+ * DTO é a intenção/papel (transportar dados com segurança).
  */
 @Schema(description = "Dados necessários para a criação ou atualização de um usuário na Fase 1")
 public record UserRequest(

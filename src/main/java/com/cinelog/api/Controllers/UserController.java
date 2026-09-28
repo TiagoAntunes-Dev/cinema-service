@@ -41,6 +41,7 @@ public class UserController {
 
     // Injeção de dependência via Construtor. É ativada automaticamente pelo Spring.
     public UserController(UserService userService) {
+
         this.userService = userService;
     }
 
@@ -57,6 +58,8 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos (nome vazio ou e-mail incorreto)",
                     content = @Content(schema = @Schema(implementation = APIError.class)))
     })
+
+    // User Response: É o seu DTO de Saída. É o objeto limpo que você retorna para o cliente
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest userRequest){
         // Aciona o serviço para salvar o usuário e armazena a entidade que retornou
         User user = userService.saveUser(userRequest);
@@ -65,12 +68,14 @@ public class UserController {
         UserResponse userResponse = new UserResponse(user.getId(), user.getName(), user.getEmail());
 
         // Retorna Status 201 (Created), adiciona o cabeçalho "Location" com a URI do recurso e injeta o DTO no corpo.
-        return ResponseEntity.created(URI.create("/api/v1/users/" + user.getId())).body(userResponse);
+        return ResponseEntity
+                .created(URI.create("/api/v1/users/" + user.getId())) // 1. Status 201 + Header Location
+                .body(userResponse);                                  // 2. Corpos dos dados em JSON
     }
 
     /**
      * @GetMapping("/users/{id}"): Mapeia requisições GET para um ID específico.
-     * @PathVariable: Extrai o "{id}" da URL (ex: /api/v1/users/5) e coloca na variável "long id".
+     * @PathVariable: Extrai o "{id}" da URL (ex: /api/v1/users/5).
      */
     @GetMapping("/users/{id}")
     @Operation(summary = "Buscar usuário por ID", description = "Retorna os dados detalhados de um usuário específico com base no ID informado na URL.")
