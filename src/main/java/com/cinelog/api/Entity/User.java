@@ -1,6 +1,7 @@
 package com.cinelog.api.Entity; // Define o pacote onde ficam as classes que representam as tabelas do banco de dados
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 
 /**
  * @Entity: conecta a Programação Orientada a Objetos (classes, atributos e tipos Java)
@@ -29,9 +30,10 @@ public class User {
      * Como não passamos parâmetros (ex: name="nome_usuario"), a coluna terá o mesmo nome do atributo ("name").
      */
     @Column
+    @Size(min = 3, max = 100)
     private String name;
 
-    @Column
+    @Column(unique = true, nullable = false)
     private String email;
 
     /**
@@ -47,7 +49,7 @@ public class User {
      * Criado para facilitar a nossa vida quando precisarmos transformar um DTO em Entidade
      * lá no UserService (não passamos o ID porque ele é gerado pelo banco).
      */
-    public User(String email, String name) {
+    public User(String name, String email) {
         this.email = email;
         this.name = name;
     }

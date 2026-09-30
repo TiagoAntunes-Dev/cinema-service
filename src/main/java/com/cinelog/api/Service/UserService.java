@@ -29,7 +29,12 @@ public class UserService {
 
     // CREATE: Processa a criação de um novo usuário
     public User saveUser(UserRequest userRequest) {
-        // CORRIGIDO: Ordem ajustada para (name, email) correspondendo exatamente à entidade User
+
+        if (userRepository.existsByEmail(userRequest.email())) {
+            throw new IllegalArgumentException("Já existe um usuário cadastrado com o e-mail: " + userRequest.email());
+        }
+
+        // Ordem ajustada para (name, email) correspondendo exatamente à entidade User
         User user = new User(userRequest.name(), userRequest.email());
 
         // O JPA gera o SQL INSERT, salva no banco e devolve a entidade preenchida com o ID autogerado

@@ -37,6 +37,7 @@ import java.util.List;
 public class UserController {
 
     // Declaração da dependência da camada de serviço (onde estão as regras de negócio)
+    // private? Para garantir o encapsulamento. Apenas o próprio UserController precisa ter acesso direto ao Service.
     private UserService userService;
 
     // Injeção de dependência via Construtor. É ativada automaticamente pelo Spring.

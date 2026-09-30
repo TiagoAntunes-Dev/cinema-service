@@ -44,6 +44,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(apiError);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<APIError> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
+        APIError error = new APIError(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(), // Status 400 (Requisição Inválida)
+                "BAD_REQUEST",
+                ex.getMessage(), // Aqui vai vir a mensagem: "Já existe um usuário cadastrado com o e-mail..."
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     /**
      * Tratamento de exceções genéricas. Captura o super tipo "Exception".
      * Serve como última linha de defesa para erros que não previmos (como falha no banco),
