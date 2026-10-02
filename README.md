@@ -330,6 +330,8 @@ Database
 
 ---
 
+https://scryfall.com/docs/api
+
 ## ✅ Checklist
 
 * [ ] Entender REST e CRUD
