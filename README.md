@@ -372,6 +372,12 @@ curl http://localhost:8080/api/v1/watchlists/1/items?status=QUERO_VER
 
 ---
 
+## 📮 Coleção do Postman
+
+![Coleção Postman rodando com 66 testes aprovados](postman/Postman-Colecao.png)
+
+Para testar a API rapidamente, importe a coleção na pasta `postman/`...
+
 ## 📂 Estrutura do projeto
 
 ```
