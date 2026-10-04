@@ -330,6 +330,9 @@ Database
 
 ---
 
+https://scryfall.com/docs/api
+
+https://senacsp.blackboard.com/ultra/courses/_316557_1/cl/outline
 ## ✅ Checklist
 
 * [ ] Entender REST e CRUD
