@@ -1,8 +1,7 @@
-package com.cinelog.api.DTO; // Fica junto com os modelos pois é a estrutura da resposta de erro
+package com.cinelog.api.DTO;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -27,5 +26,5 @@ public record APIError(
         @Schema(description = "Caminho da rota onde o erro foi disparado", example = "/api/v1/users/99")
         String path
 
-) implements Serializable {
+) {
 }

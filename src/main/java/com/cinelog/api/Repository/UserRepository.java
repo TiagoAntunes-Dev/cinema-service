@@ -16,5 +16,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     // Método criado para verificar se já existe um usuário com o e-mail informado
-    boolean existsByEmail(String email);
+    boolean existsByEmailIgnoreCase(String email);
 }

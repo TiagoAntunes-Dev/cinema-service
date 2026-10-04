@@ -1,9 +1,11 @@
-package com.cinelog.api.Service; // Define o pacote da camada intermediária que abriga as regras de negócio
+package com.cinelog.api.Service;
 
 import com.cinelog.api.Entity.User;
 import com.cinelog.api.DTO.UserRequest;
 import com.cinelog.api.DTO.UserResponse;
 import com.cinelog.api.Repository.UserRepository;
+import com.cinelog.api.Repository.WatchListRepository;
+import com.cinelog.api.Exception.ConflictException;
 import com.cinelog.api.Exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -17,27 +19,25 @@ import java.util.List;
 @Service
 public class UserService {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final WatchListRepository watchListRepository;
 
-    /**
-     * Injeção de dependência via Construtor (Recomendado).
-     * O Spring injeta o UserRepository automaticamente ao instanciar o UserService.
-     */
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, WatchListRepository watchListRepository) {
         this.userRepository = userRepository;
+        this.watchListRepository = watchListRepository;
     }
 
     // CREATE: Processa a criação de um novo usuário
     public User saveUser(UserRequest userRequest) {
 
-        if (userRepository.existsByEmail(userRequest.email())) {
-            throw new IllegalArgumentException("Já existe um usuário cadastrado com o e-mail: " + userRequest.email());
+        // Regra de negócio: não pode haver dois usuários com o mesmo e-mail.
+        // 409 (Conflict): conflita com um recurso que já existe.
+        if (userRepository.existsByEmailIgnoreCase(userRequest.email())) {
+            throw new ConflictException("Já existe um usuário cadastrado com o e-mail: " + userRequest.email());
         }
 
-        // Ordem ajustada para (name, email) correspondendo exatamente à entidade User
         User user = new User(userRequest.name(), userRequest.email());
 
-        // O JPA gera o SQL INSERT, salva no banco e devolve a entidade preenchida com o ID autogerado
         User savedUser = userRepository.save(user);
 
         return savedUser;
@@ -45,24 +45,18 @@ public class UserService {
 
     // READ: Busca um usuário específico pelo ID
     public UserResponse getUserById(long id) {
-        // findById devolve um "Optional". Se existir, pega o usuário.
-        // Se não existir, lança a nossa exceção customizada de erro 404 (que cai no GlobalExceptionHandler).
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com o ID: " + id));
 
-        // Mapeia a Entidade de volta para um DTO de Resposta antes de devolver para o Controller
         return new UserResponse(user.getId(), user.getName(), user.getEmail());
     }
 
     // READ: Busca todos os usuários cadastrados
     public List<UserResponse> getAllUsers() {
-        // Busca todas as entidades do banco
         List<User> allUsers = userRepository.findAll();
 
-        // Cria uma lista vazia de DTOs
         List<UserResponse> userResponseList = new ArrayList<>();
 
-        // Laço (foreach): Para cada entidade (User) da lista de banco, transforma em DTO e adiciona na lista nova
         for (User user : allUsers) {
             userResponseList.add(new UserResponse(user.getId(), user.getName(), user.getEmail()));
         }
@@ -72,30 +66,36 @@ public class UserService {
 
     // DELETE: Apaga o usuário do banco com validação de existência
     public void deleteUserId(long id) {
-        // CORRIGIDO: Verifica se o ID realmente existe antes de mandar apagar.
-        // Se não existir, lança o erro 404 controlado pelo GlobalExceptionHandler (evitando o erro 500).
         if (!userRepository.existsById(id)) {
             throw new ResourceNotFoundException("Usuário não encontrado com o ID: " + id);
         }
 
-        // O JPA apaga diretamente do banco pelo ID
+        // Regra de negócio: não se apaga um usuário que ainda tem watchlists (erro 409).
+        if (watchListRepository.existsByUserId(id)) {
+            throw new ConflictException("Não é possível excluir o usuário com ID " + id + ", pois ele possui watchlists");
+        }
+
         userRepository.deleteById(id);
     }
 
     // UPDATE: Atualiza os dados de um usuário existente
     public UserResponse updateUser(long id, UserRequest userRequest) {
-        // Primeiro verifica se o usuário existe. Se não existir, lança erro 404 e interrompe a execução aqui.
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com o ID: " + id));
 
-        // Se chegou aqui, o usuário existe. Então atualizamos os campos em memória com os dados novos do DTO.
+        // Só valida duplicidade se o e-mail realmente mudou.
+        // Sem isso, mandar o mesmo e-mail que o usuário já tem daria conflito com ele mesmo.
+        boolean emailChanged = !user.getEmail().equalsIgnoreCase(userRequest.email());
+
+        if (emailChanged && userRepository.existsByEmailIgnoreCase(userRequest.email())) {
+            throw new ConflictException("Já existe um usuário cadastrado com o e-mail: " + userRequest.email());
+        }
+
         user.setName(userRequest.name());
         user.setEmail(userRequest.email());
 
-        // Ao chamar save() passando uma entidade que JÁ TEM UM ID definido, o JPA executa um UPDATE em vez de um INSERT
         User savedUser = userRepository.save(user);
 
-        // Devolvemos o resultado formatado como DTO
         return new UserResponse(savedUser.getId(), savedUser.getName(), savedUser.getEmail());
     }
 }

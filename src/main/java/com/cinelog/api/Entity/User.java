@@ -1,6 +1,8 @@
 package com.cinelog.api.Entity; // Define o pacote onde ficam as classes que representam as tabelas do banco de dados
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -29,10 +31,11 @@ public class User {
      * @Column: Opcional, mas explícito. Garante que este atributo seja uma coluna na tabela.
      * Como não passamos parâmetros (ex: name="nome_usuario"), a coluna terá o mesmo nome do atributo ("name").
      */
-    @Column
-    @Size(min = 3, max = 100)
+    @NotBlank(message = "O nome não pode estar em branco")
+    @Size(min = 3, max = 100, message = "O nome deve ter entre 3 e 100 caracteres")
     private String name;
 
+    @Email(message = "O e-mail deve ter um formato válido")
     @Column(unique = true, nullable = false)
     private String email;
 
