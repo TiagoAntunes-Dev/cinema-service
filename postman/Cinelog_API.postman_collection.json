@@ -1,0 +1,2199 @@
+{
+  "info": {
+    "name": "🎬 Cinelog API",
+    "description": "# 🎬 Cinelog API\nColeção completa da **Cinelog API** — catalogação de filmes e watchlists pessoais.\n\n---\n\n### 📌 Antes de rodar\n- 🔄 Reinicie a aplicação (o `data.sql` repopula os dados base)\n- 🌐 Variável `baseUrl` = `http://localhost:8080`\n\n### 🧭 Ordem das requests\n- ✅ Primeiro os **sucessos**\n- ❌ Depois os **erros** (400, 404, 409)\n\n### 📚 Pastas\n| Pasta | Recurso |\n|---|---|\n| 👤 Users | `/users` |\n| 🎭 Genres | `/genres` |\n| 🎬 Movies | `/movies` |\n| 📋 MovieDetails | `/movie-details` |\n| 📺 Watchlists | `/watchlists` |\n| 🎞️ WatchlistItems | `/watchlist-items` |",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "👤 1. Users",
+      "description": "Gerenciamento de **usuários** da plataforma.\n\n`GET` `POST` `PUT` `DELETE` em `/api/v1/users`",
+      "item": [
+        {
+          "name": "01 · ✅ Listar usuários",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Resposta tem _embedded', () => pm.expect(pm.response.json()).to.have.property('_embedded'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            },
+            "description": "Lista todos os usuários (HAL).\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "02 · ✅ Buscar usuário por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tem _links', () => pm.expect(pm.response.json()).to.have.property('_links'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "1"
+              ]
+            },
+            "description": "Retorna o usuário `1` com links HATEOAS.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "03 · ❌ Buscar usuário inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Mensagem correta', () => pm.expect(pm.response.json().message).to.include('não encontrado'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "999"
+              ]
+            },
+            "description": "ID inexistente → `404`.\n\n**Esperado:** `404 Not Found`"
+          }
+        },
+        {
+          "name": "04 · ✅ Criar usuário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Tem header Location', () => pm.response.to.have.header('Location'));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('userId', body.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            },
+            "description": "Cria usuário e salva `userId` no ambiente.\n\n**Esperado:** `201 Created`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Usuário Teste Postman\",\n  \"email\": \"postman.user@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "05 · ❌ E-mail duplicado (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            },
+            "description": "E-mail já cadastrado → `409`.\n\n**Esperado:** `409 Conflict`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Outro Nome\",\n  \"email\": \"tiagoantunes1974@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "06 · ❌ Validação: nome em branco (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            },
+            "description": "Nome vazio → `400`.\n\n**Esperado:** `400 Bad Request`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"email\": \"x@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "07 · ✅ Atualizar usuário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Atualiza o usuário criado.\n\n**Esperado:** `200 OK`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Usuário Teste Postman (editado)\",\n  \"email\": \"postman.user@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "08 · ❌ Deletar usuário com watchlist (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "1"
+              ]
+            },
+            "description": "Usuário possui watchlist → `409`.\n\n**Esperado:** `409 Conflict`"
+          }
+        },
+        {
+          "name": "09 · ✅ Watchlists do usuário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/1/watchlists",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "1",
+                "watchlists"
+              ]
+            },
+            "description": "Todas as watchlists do usuário `1`.\n\n**Esperado:** `200 OK`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎭 2. Genres",
+      "description": "Gêneros cinematográficos.\n\n`/api/v1/genres`",
+      "item": [
+        {
+          "name": "01 · ✅ Listar gêneros",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/genres",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "genres"
+              ]
+            },
+            "description": "Lista todos os gêneros.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "02 · ✅ Buscar gênero por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tem _links', () => pm.expect(pm.response.json()).to.have.property('_links'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/genres/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "genres",
+                "1"
+              ]
+            },
+            "description": "Retorna o gênero `1`.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "03 · ❌ Buscar gênero inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/genres/999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "genres",
+                "999"
+              ]
+            },
+            "description": "ID inexistente → `404`.\n\n**Esperado:** `404 Not Found`"
+          }
+        },
+        {
+          "name": "04 · 🔍 Buscar gênero por nome",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/genres/search?nome=ação",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "genres",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "nome",
+                  "value": "ação"
+                }
+              ]
+            },
+            "description": "Busca por nome: `?nome=ação`.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "05 · ✅ Criar gênero",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('genreId', body.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/genres",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "genres"
+              ]
+            },
+            "description": "Cria gênero e salva `genreId`.\n\n**Esperado:** `201 Created`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Documentário\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "06 · ❌ Gênero duplicado (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/genres",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "genres"
+              ]
+            },
+            "description": "Nome já existente → `409`.\n\n**Esperado:** `409 Conflict`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Ação\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "07 · ✅ Atualizar gênero",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/genres/{{genreId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "genres",
+                "{{genreId}}"
+              ]
+            },
+            "description": "Atualiza o gênero criado.\n\n**Esperado:** `200 OK`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Documentário Editado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "08 · ❌ Deletar gênero em uso (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/genres/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "genres",
+                "1"
+              ]
+            },
+            "description": "Gênero vinculado a filmes → `409`.\n\n**Esperado:** `409 Conflict`"
+          }
+        },
+        {
+          "name": "09 · ✅ Filmes do gênero",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/genres/1/movies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "genres",
+                "1",
+                "movies"
+              ]
+            },
+            "description": "Filmes do gênero `1`.\n\n**Esperado:** `200 OK`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎬 3. Movies",
+      "description": "Catálogo de **filmes**.\n\n`/api/v1/movies`",
+      "item": [
+        {
+          "name": "01 · ✅ Listar filmes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movies"
+              ]
+            },
+            "description": "Lista todos os filmes.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "02 · ✅ Buscar filme por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tem _links', () => pm.expect(pm.response.json()).to.have.property('_links'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movies/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movies",
+                "1"
+              ]
+            },
+            "description": "Retorna o filme `1`.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "03 · ❌ Buscar filme inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movies/999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movies",
+                "999"
+              ]
+            },
+            "description": "ID inexistente → `404`.\n\n**Esperado:** `404 Not Found`"
+          }
+        },
+        {
+          "name": "04 · 🔍 Buscar filme por título",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movies/search?titulo=matrix",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movies",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "titulo",
+                  "value": "matrix"
+                }
+              ]
+            },
+            "description": "Busca por título: `?titulo=matrix`.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "05 · ✅ Criar filme",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('movieId', body.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movies"
+              ]
+            },
+            "description": "Cria filme e salva `movieId`.\n\n**Esperado:** `201 Created`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Oppenheimer\",\n  \"anoLancamento\": 2023,\n  \"duracao\": 180,\n  \"classificacaoIndicativa\": \"16\",\n  \"genreIds\": [\n    1,\n    3\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "06 · ❌ Gênero inválido (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movies"
+              ]
+            },
+            "description": "`genreIds` inexistente → `404`.\n\n**Esperado:** `404 Not Found`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Filme Sem Gênero Válido\",\n  \"anoLancamento\": 2020,\n  \"duracao\": 100,\n  \"classificacaoIndicativa\": \"12\",\n  \"genreIds\": [\n    999\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "07 · ✅ Atualizar filme",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movies/{{movieId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movies",
+                "{{movieId}}"
+              ]
+            },
+            "description": "Atualiza o filme criado.\n\n**Esperado:** `200 OK`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Oppenheimer (editado)\",\n  \"anoLancamento\": 2023,\n  \"duracao\": 181,\n  \"classificacaoIndicativa\": \"16\",\n  \"genreIds\": [\n    1,\n    3\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "08 · ❌ Deletar filme em watchlist (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movies/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movies",
+                "1"
+              ]
+            },
+            "description": "Filme presente em watchlist → `409`.\n\n**Esperado:** `409 Conflict`"
+          }
+        },
+        {
+          "name": "09 · ✅ Detalhes do filme",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movies/1/details",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movies",
+                "1",
+                "details"
+              ]
+            },
+            "description": "Detalhes estendidos do filme `1`.\n\n**Esperado:** `200 OK`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 4. MovieDetails",
+      "description": "Informações estendidas (relação **1:1** com filme).\n\n`/api/v1/movie-details`",
+      "item": [
+        {
+          "name": "01 · ✅ Listar detalhes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movie-details",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movie-details"
+              ]
+            },
+            "description": "Lista todos os detalhes.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "02 · ✅ Buscar detalhes por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movie-details/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movie-details",
+                "1"
+              ]
+            },
+            "description": "Retorna os detalhes `1`.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "03 · 🔍 Buscar por país de origem",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movie-details/search?paisOrigem=estados",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movie-details",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "paisOrigem",
+                  "value": "estados"
+                }
+              ]
+            },
+            "description": "Filtro: `?paisOrigem=estados`.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "04 · ✅ Criar detalhes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('detailsId', body.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movie-details",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movie-details"
+              ]
+            },
+            "description": "Cria detalhes e salva `detailsId`.\n\n**Esperado:** `201 Created`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": 2,\n  \"sinopseLonga\": \"Um programador descobre que a realidade é uma simulação.\",\n  \"orcamento\": 63000000.0,\n  \"paisOrigem\": \"Estados Unidos\",\n  \"idiomaOriginal\": \"Inglês\",\n  \"notasProducao\": \"Filme de 1999 dos irmãos Wachowski.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "05 · ❌ Detalhes duplicados (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movie-details",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movie-details"
+              ]
+            },
+            "description": "Filme já tem detalhes → `409`.\n\n**Esperado:** `409 Conflict`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "06 · ❌ Filme inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movie-details",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movie-details"
+              ]
+            },
+            "description": "`movieId` inexistente → `404`.\n\n**Esperado:** `404 Not Found`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": 999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "07 · ✅ Atualizar detalhes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movie-details/{{detailsId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movie-details",
+                "{{detailsId}}"
+              ]
+            },
+            "description": "Atualiza os detalhes criados.\n\n**Esperado:** `200 OK`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": 2,\n  \"sinopseLonga\": \"Sinopse atualizada do Matrix.\",\n  \"orcamento\": 63000000.0,\n  \"paisOrigem\": \"Estados Unidos\",\n  \"idiomaOriginal\": \"Inglês\",\n  \"notasProducao\": \"Atualizado via Postman.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "08 · ❌ Trocar filme no PUT (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movie-details/{{detailsId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movie-details",
+                "{{detailsId}}"
+              ]
+            },
+            "description": "Não é permitido trocar o filme → `400`.\n\n**Esperado:** `400 Bad Request`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": 3,\n  \"sinopseLonga\": \"Tentando trocar o filme.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "09 · ✅ Atualização parcial (PATCH)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movie-details/{{detailsId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movie-details",
+                "{{detailsId}}"
+              ]
+            },
+            "description": "Altera apenas `notasProducao`.\n\n**Esperado:** `200 OK`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notasProducao\": \"PATCH via Postman: só o notasProducao foi alterado.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "10 · 🗑️ Deletar detalhes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movie-details/{{detailsId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movie-details",
+                "{{detailsId}}"
+              ]
+            },
+            "description": "Remove os detalhes → `204`.\n\n**Esperado:** `204 No Content`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📺 5. Watchlists",
+      "description": "Listas de filmes dos usuários.\n\n`/api/v1/watchlists`",
+      "item": [
+        {
+          "name": "01 · ✅ Listar watchlists",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlists",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlists"
+              ]
+            },
+            "description": "Lista todas as watchlists.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "02 · ✅ Buscar watchlist por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlists/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlists",
+                "1"
+              ]
+            },
+            "description": "Retorna a watchlist `1`.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "03 · ❌ Watchlist inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlists/999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlists",
+                "999"
+              ]
+            },
+            "description": "ID inexistente → `404`.\n\n**Esperado:** `404 Not Found`"
+          }
+        },
+        {
+          "name": "04 · ✅ Watchlists do usuário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/1/watchlists",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "1",
+                "watchlists"
+              ]
+            },
+            "description": "Watchlists do usuário `1`.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "05 · ✅ Criar watchlist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('watchlistId', body.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlists",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlists"
+              ]
+            },
+            "description": "Cria watchlist e salva `watchlistId`.\n\n**Esperado:** `201 Created`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Minha Watchlist\",\n  \"descricao\": \"Lista criada via Postman\",\n  \"userId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "06 · ❌ userId inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlists",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlists"
+              ]
+            },
+            "description": "Dono inexistente → `404`.\n\n**Esperado:** `404 Not Found`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Watchlist Inválida\",\n  \"descricao\": \"Teste\",\n  \"userId\": 999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "07 · ✅ Atualizar watchlist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlists/{{watchlistId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlists",
+                "{{watchlistId}}"
+              ]
+            },
+            "description": "Atualiza a watchlist criada.\n\n**Esperado:** `200 OK`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Minha Watchlist (editada)\",\n  \"descricao\": \"Atualizada via Postman\",\n  \"userId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "08 · ❌ Trocar dono no PUT (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlists/{{watchlistId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlists",
+                "{{watchlistId}}"
+              ]
+            },
+            "description": "Não é permitido trocar o dono → `400`.\n\n**Esperado:** `400 Bad Request`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Tentando trocar dono\",\n  \"descricao\": \"Teste\",\n  \"userId\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "09 · 🗑️ Deletar watchlist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlists/{{watchlistId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlists",
+                "{{watchlistId}}"
+              ]
+            },
+            "description": "Remove a watchlist → `204`.\n\n**Esperado:** `204 No Content`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎞️ 6. WatchlistItems",
+      "description": "Filmes dentro das watchlists, com **status** e **nota**.\n\n`/api/v1/watchlist-items`\n\nStatus: `QUERO_VER` · `VISTO`",
+      "item": [
+        {
+          "name": "01 · ✅ Listar itens",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlist-items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlist-items"
+              ]
+            },
+            "description": "Lista todos os itens.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "02 · ✅ Buscar item por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tem _links', () => pm.expect(pm.response.json()).to.have.property('_links'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlist-items/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlist-items",
+                "1"
+              ]
+            },
+            "description": "Retorna o item `1`.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "03 · ❌ Item inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlist-items/999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlist-items",
+                "999"
+              ]
+            },
+            "description": "ID inexistente → `404`.\n\n**Esperado:** `404 Not Found`"
+          }
+        },
+        {
+          "name": "04 · ✅ Itens de uma watchlist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlists/1/items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlists",
+                "1",
+                "items"
+              ]
+            },
+            "description": "Itens da watchlist `1`.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "05 · 🔍 Filtrar por status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlists/1/items?status=VISTO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlists",
+                "1",
+                "items"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "VISTO"
+                }
+              ]
+            },
+            "description": "Filtro: `?status=VISTO`.\n\n**Esperado:** `200 OK`"
+          }
+        },
+        {
+          "name": "06 · ✅ Criar item",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('itemId', body.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlist-items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlist-items"
+              ]
+            },
+            "description": "Cria item e salva `itemId`.\n\n**Esperado:** `201 Created`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"watchlistId\": 2,\n  \"movieId\": 1,\n  \"status\": \"QUERO_VER\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "07 · ❌ Nota com status errado (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensagem correta', () => pm.expect(pm.response.json().message).to.include('VISTO'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlist-items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlist-items"
+              ]
+            },
+            "description": "Nota só vale com status `VISTO` → `400`.\n\n**Esperado:** `400 Bad Request`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"watchlistId\": 2,\n  \"movieId\": 2,\n  \"status\": \"QUERO_VER\",\n  \"nota\": 9\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "08 · ❌ Filme duplicado na lista (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlist-items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlist-items"
+              ]
+            },
+            "description": "Filme já na lista → `409`.\n\n**Esperado:** `409 Conflict`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"watchlistId\": 1,\n  \"movieId\": 1,\n  \"status\": \"QUERO_VER\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "09 · ✅ Atualizar item",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlist-items/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlist-items",
+                "1"
+              ]
+            },
+            "description": "Marca como `VISTO` com nota 9.\n\n**Esperado:** `200 OK`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"watchlistId\": 1,\n  \"movieId\": 1,\n  \"status\": \"VISTO\",\n  \"nota\": 9\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "10 · ❌ PUT trocando IDs (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensagem correta', () => pm.expect(pm.response.json().message).to.include('trocar'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlist-items/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlist-items",
+                "1"
+              ]
+            },
+            "description": "Não é permitido trocar IDs → `400`.\n\n**Esperado:** `400 Bad Request`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"watchlistId\": 2,\n  \"movieId\": 3,\n  \"status\": \"VISTO\",\n  \"nota\": 7\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "11 · 🗑️ Deletar item",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/watchlist-items/{{itemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "watchlist-items",
+                "{{itemId}}"
+              ]
+            },
+            "description": "Remove o item → `204`.\n\n**Esperado:** `204 No Content`"
+          }
+        }
+      ]
+    }
+  ]
+}
