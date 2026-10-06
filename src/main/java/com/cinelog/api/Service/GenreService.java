@@ -18,10 +18,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class GenreService {
 
-    private GenreRepository genreRepository;
+    private final GenreRepository genreRepository;
 
     // Precisamos do MovieRepository para saber se algum filme ainda usa o gênero antes de apagá-lo
-    private MovieRepository movieRepository;
+    private final MovieRepository movieRepository;
 
     // Injeção de dependência via Construtor: o Spring entrega os dois repositories automaticamente
     public GenreService(GenreRepository genreRepository, MovieRepository movieRepository) {
@@ -97,6 +97,7 @@ public class GenreService {
     // DELETE: Apaga um gênero
     public void deleteGenre(long id) {
         // Se o ID não existir, erro 404
+        // ✅ VERIFICAÇÃO 1 — o gênero existe?
         if (!genreRepository.existsById(id)) {
             throw new ResourceNotFoundException("Gênero não encontrado com o ID: " + id);
         }
@@ -107,6 +108,7 @@ public class GenreService {
             throw new ConflictException("Não é possível excluir o gênero com ID " + id + ", pois ele está associado a filmes");
         }
 
+        // 3. DELETE
         genreRepository.deleteById(id);
     }
 

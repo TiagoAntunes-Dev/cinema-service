@@ -10,7 +10,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Representação dos dados do usuário retornados com sucesso pela API")
 public record UserResponse(
 
-        @Schema(description = "Identificador único gerado pelo banco de dados", example = "1")
+        @Schema(
+                description = "Identificador único gerado pelo banco de dados",
+                example = "1",
+                accessMode = Schema.AccessMode.READ_ONLY)
         long id,
 
         @Schema(description = "Nome do usuário", example = "Tiago Antunes")
