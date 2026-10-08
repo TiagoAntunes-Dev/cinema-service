@@ -48,6 +48,24 @@ VALUES (1,
         'Inglês',
         'Parte das cenas foi filmada na Islândia.');
 
+-- Matrix (movie_id = 2)
+INSERT INTO movie_details (movie_id, sinopse_longa, orcamento, pais_origem, idioma_original, notas_producao)
+VALUES (2,
+        'Um programador e hacker descobre que a realidade em que vive é uma simulação criada por máquinas e se junta a um grupo de rebeldes para libertar a humanidade.',
+        63000000.00,
+        'Estados Unidos',
+        'Inglês',
+        'Dirigido pelas irmãs Wachowski e filmado na Austrália, em Sydney.');
+
+-- O Auto da Compadecida (movie_id = 3)
+INSERT INTO movie_details (movie_id, sinopse_longa, orcamento, pais_origem, idioma_original, notas_producao)
+VALUES (3,
+        'Os pobres e astutos João Grilo e Chicó enfrentam patrões, o cangaço e a Igreja no sertão nordestino, até serem julgados com a ajuda da Compadecida.',
+        1000000,
+        'Brasil',
+        'Português',
+        'Adaptação da peça de Ariano Suassuna, dirigida por Guel Arraes e filmada em Cabaceiras, na Paraíba. Nasceu como minissérie da Globo.');
+
 -- ============================================================
 -- WATCHLISTS
 -- ============================================================

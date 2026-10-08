@@ -3,6 +3,10 @@ package com.cinelog.api; // Define o pacote raiz da sua aplicação
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+// http://localhost:8080/swagger-ui/index.html#/
+
+// http://localhost:8080/h2-console
+
 /**
  * @SpringBootApplication: Esta é a anotação mais importante do seu projeto.
  * Na verdade, ela é um "combo" que embute três outras anotações poderosas por debaixo dos panos:
