@@ -65,6 +65,8 @@ public class UserController {
         EntityModel<UserResponse> model = EntityModel.of(userResponse,
                 linkTo(methodOn(UserController.class).getUser(userResponse.id())).withSelfRel(),
                 linkTo(methodOn(UserController.class).getAllUsers(null)).withRel("all-users"),
+
+                // Usuário pode acessar suas Watchlist com um clique
                 linkTo(methodOn(WatchListController.class).getWatchListsByUser(userResponse.id(), null)).withRel("watchlists")
         );
 
@@ -90,6 +92,8 @@ public class UserController {
                 linkTo(methodOn(UserController.class).getAllUsers(null)).withRel("all-users"),
                 linkTo(methodOn(UserController.class).updateUser(id, null)).withRel("update"),
                 linkTo(methodOn(UserController.class).deleteUser(id)).withRel("delete"),
+
+                // Usuário pode acessar suas Watchlist com um clique
                 linkTo(methodOn(WatchListController.class).getWatchListsByUser(id, null)).withRel("watchlists")
         );
 
@@ -108,6 +112,8 @@ public class UserController {
                 page,
                 userResponse -> EntityModel.of(userResponse,
                         linkTo(methodOn(UserController.class).getUser(userResponse.id())).withSelfRel(),
+
+                        // Usuário pode acessar suas Watchlist com um clique
                         linkTo(methodOn(WatchListController.class).getWatchListsByUser(userResponse.id(), null)).withRel("watchlists")
                 )
         );
@@ -152,6 +158,8 @@ public class UserController {
                 linkTo(methodOn(UserController.class).getUser(id)).withSelfRel(),
                 linkTo(methodOn(UserController.class).getAllUsers(null)).withRel("all-users"),
                 linkTo(methodOn(UserController.class).deleteUser(id)).withRel("delete"),
+
+                // Usuário pode acessar suas Watchlist com um clique
                 linkTo(methodOn(WatchListController.class).getWatchListsByUser(id, null)).withRel("watchlists")
         );
 

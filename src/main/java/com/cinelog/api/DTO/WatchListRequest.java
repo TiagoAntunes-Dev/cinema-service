@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 
 /**
  * WatchListRequest: DTO de ENTRADA para criar ou atualizar uma watchlist.
+ * (transportar dados com segurança)
  */
 @Schema(description = "Dados necessários para a criação ou atualização de uma watchlist")
 public record WatchListRequest(

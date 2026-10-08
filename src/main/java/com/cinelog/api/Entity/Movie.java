@@ -1,11 +1,7 @@
 package com.cinelog.api.Entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -35,6 +31,7 @@ public class Movie {
     // 1888 é o ano do primeiro filme já registrado.
     @NotNull(message = "O ano de lançamento é obrigatório")
     @Min(value = 1888, message = "O ano de lançamento deve ser a partir de 1888")
+    @Max(value = 2050, message = "O ano de lançamento deve ser no máximo 2050")
     @Column(nullable = false)
     private Integer anoLancamento;
 
@@ -64,6 +61,8 @@ public class Movie {
             joinColumns = @JoinColumn(name = "movie_id"),
             inverseJoinColumns = @JoinColumn(name = "genre_id")
     )
+
+    // Sem Duplicata
     private Set<Genre> genres = new HashSet<>();
 
     public Movie() {

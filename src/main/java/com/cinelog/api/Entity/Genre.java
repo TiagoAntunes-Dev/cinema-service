@@ -22,7 +22,7 @@ public class Genre {
     // nullable = false: a coluna no banco não aceita vazio (NULL).
     // unique = true: o banco não deixa cadastrar dois gêneros com o mesmo nome.
     @NotBlank(message = "O nome do gênero não pode estar em branco")
-    @Size(max = 50, message = "O nome do gênero deve ter no máximo 50 caracteres")
+    @Size(min = 4 ,max = 50, message = "O nome do gênero deve ter 4 a 50 caracteres")
     @Column(nullable = false, unique = true)
     private String nome;
 

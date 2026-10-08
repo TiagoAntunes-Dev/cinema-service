@@ -20,10 +20,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class MovieDetailsService {
 
-    private MovieDetailsRepository movieDetailsRepository;
+    private final MovieDetailsRepository movieDetailsRepository;
 
     // Precisamos do MovieRepository para achar o filme dono dos detalhes
-    private MovieRepository movieRepository;
+    private final MovieRepository movieRepository;
 
     public MovieDetailsService(MovieDetailsRepository movieDetailsRepository, MovieRepository movieRepository) {
         this.movieDetailsRepository = movieDetailsRepository;

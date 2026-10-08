@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 
 /**
  * APIError: Padroniza a resposta de erro da nossa API.
- * Se der erro, o cliente frontend sempre vai saber que receberá um JSON com timestamp, status, mensagem e o caminho(path).
  */
 @Schema(description = "Estrutura padronizada para retorno de erros da API")
 public record APIError(

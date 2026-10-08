@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * WatchListResponse: DTO de SAÍDA com os dados de uma watchlist.
+ * (transportar dados com segurança)
  */
 @Schema(description = "Representação dos dados da watchlist retornados com sucesso pela API")
 public record WatchListResponse(

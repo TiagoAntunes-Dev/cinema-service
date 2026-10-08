@@ -6,6 +6,7 @@ import java.util.List;
 
 /**
  * MovieResponse: DTO de SAÍDA com os dados de um filme.
+ * (transportar dados com segurança)
  */
 @Schema(description = "Representação dos dados do filme retornados com sucesso pela API")
 public record MovieResponse(
@@ -30,6 +31,8 @@ public record MovieResponse(
         String classificacaoIndicativa,
 
         @Schema(description = "Gêneros associados ao filme")
+
+        // Devolve o Objeto Completo (ID, Nome)
         List<GenreResponse> generos
 ) {
 }

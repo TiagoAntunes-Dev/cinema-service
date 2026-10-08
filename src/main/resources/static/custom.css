@@ -1,0 +1,67 @@
+/* Esconder o cabeçalho superior (Topbar) */
+.swagger-ui .topbar {
+    display: none;
+}
+
+/* Fundo da página */
+body {
+    background-color: #f4f6f8;
+}
+
+/* Fonte em toda a documentação */
+.swagger-ui,
+.swagger-ui .opblock-tag,
+.swagger-ui .opblock .opblock-summary-description,
+.swagger-ui .btn {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Título principal */
+.swagger-ui .info .title {
+    color: #1a202c;
+}
+
+/* Seções (Usuários, Gêneros, Filmes...) como cards */
+.swagger-ui .opblock-tag {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    color: #1a202c;
+}
+
+.swagger-ui .opblock-tag:hover {
+    background: #edf2f7;
+}
+
+/* Blocos dos endpoints */
+.swagger-ui .opblock {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    overflow: hidden; /* evita o fundo colorido vazar nos cantos */
+}
+
+/* Botão "Try it out" (sem afetar o "Cancel") */
+.swagger-ui .btn.try-out__btn:not(.cancel) {
+    background-color: #3182ce;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.swagger-ui .btn.try-out__btn:not(.cancel):hover {
+    background-color: #2b6cb0;
+}
+
+/* Botão "Execute" */
+.swagger-ui .btn.execute {
+    background-color: #38a169;
+    border-color: #38a169;
+    border-radius: 4px;
+}
+
+.swagger-ui .btn.execute:hover {
+    background-color: #2f855a;
+}

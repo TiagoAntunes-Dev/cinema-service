@@ -3,9 +3,7 @@ package com.cinelog.api.DTO; // Define o pacote onde ficam os modelos de transfe
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * UserResponse: É o DTO de SAÍDA.
- * É usado para devolver dados ao cliente. Evitamos devolver a entidade 'User' direta
- * para garantir que dados sensíveis do banco (se houvessem, como senhas) nunca vazem na API.
+ * UserResponse: É o DTO de SAÍDA. Evitamos devolver a entidade 'User' direta
  */
 @Schema(description = "Representação dos dados do usuário retornados com sucesso pela API")
 public record UserResponse(

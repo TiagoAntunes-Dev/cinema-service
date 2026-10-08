@@ -13,12 +13,13 @@ import java.util.Set;
 
 /**
  * MovieRequest: DTO de ENTRADA para criar ou atualizar um filme.
+ * (transportar dados com segurança)
  */
 @Schema(description = "Dados necessários para a criação ou atualização de um filme")
 public record MovieRequest(
 
         @NotBlank(message = "O título não pode estar em branco")
-        @Size(max = 150, message = "O título deve ter no máximo 150 caracteres")
+        @Size(min = 2, max = 150, message = "O título deve ter no 2 e 150 caracteres")
         @Schema(
                 description = "Título do filme",
                 example = "Interestelar",
@@ -61,6 +62,8 @@ public record MovieRequest(
                 description = "IDs dos gêneros do filme (opcional). Os gêneros precisam já estar cadastrados",
                 example = "[1, 2]"
         )
+
+        // Filme pode ser criado sem Genre - Embora Incomum.
         Set<Long> genreIds
 ) {
 }

@@ -114,16 +114,20 @@ public class MovieService {
 
     // DELETE: Apaga um filme
     public void deleteMovie(long id) {
+
+        // Verifica se existe → 404 se não.
         if (!movieRepository.existsById(id)) {
             throw new ResourceNotFoundException("Filme não encontrado com o ID: " + id);
         }
 
+        // Verifica watchlist → 409 se em uso.
         if (watchlistItemRepository.existsByMovieId(id)) {
             throw new ConflictException("Não é possível excluir o filme com ID " + id + ", pois ele está em uma ou mais watchlists");
         }
-
+        // ⭐ Deleta os detalhes ANTES de deletar o filme
         movieDetailsRepository.findByMovieId(id).ifPresent(movieDetailsRepository::delete);
 
+        // Deleta o filme
         movieRepository.deleteById(id);
     }
 

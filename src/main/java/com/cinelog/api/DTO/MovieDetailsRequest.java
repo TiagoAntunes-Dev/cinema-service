@@ -9,7 +9,8 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 
 /**
- * MovieDetailsRequest: DTO de ENTRADA para criar ou atualizar os detalhes de um filme.
+ DTO de ENTRADA para criar ou atualizar os detalhes de um filme.
+ (transportar dados com segurança)
  */
 @Schema(description = "Dados necessários para a criação ou atualização dos detalhes de um filme")
 public record MovieDetailsRequest(

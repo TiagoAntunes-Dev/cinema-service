@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 
 /**
  * MovieDetailsResponse: DTO de SAÍDA com os detalhes de um filme.
+ * (transportar dados com segurança)
  */
 @Schema(description = "Representação dos detalhes do filme retornados com sucesso pela API")
 public record MovieDetailsResponse(
@@ -15,6 +16,8 @@ public record MovieDetailsResponse(
                 example = "1",
                 accessMode = Schema.AccessMode.READ_ONLY
         )
+
+        // id do filho
         long id,
 
         @Schema(
@@ -22,6 +25,8 @@ public record MovieDetailsResponse(
                 example = "1",
                 accessMode = Schema.AccessMode.READ_ONLY
         )
+
+        // movieId = PAI
         long movieId,
 
         @Schema(

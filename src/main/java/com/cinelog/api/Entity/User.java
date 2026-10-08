@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 /**
  * @Entity: conecta a Programação Orientada a Objetos (classes, atributos e tipos Java)
  * à estrutura relacional usado para mapear dados na database (tabelas, colunas)
- *
 /**
  * @Table(name = "users"): É uma boa prática forçar o nome da tabela no plural ("users").
  * Se não usarmos isso, o banco tentaria criar uma tabela chamada "user", o que
