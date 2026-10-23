@@ -1,67 +1,298 @@
-/* Esconder o cabeçalho superior (Topbar) */
+/* ==========================================================================
+   CINELOG API - ULTIMATE CINEMATIC THEME (IMAX / LETTERBOXD VIBE)
+   ========================================================================== */
+
+/* Fundo profundo com vinheta cinematográfica */
+body, .swagger-ui {
+    background-color: #030712 !important;
+    background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #030712 70%) !important;
+    color: #f3f4f6 !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+/* Barra de topo estilo App Bar de Streaming */
 .swagger-ui .topbar {
-    display: none;
+    background: rgba(3, 7, 18, 0.85) !important;
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(99, 102, 241, 0.3);
+    padding: 15px 0;
 }
 
-/* Fundo da página */
-body {
-    background-color: #f4f6f8;
-}
-
-/* Fonte em toda a documentação */
-.swagger-ui,
-.swagger-ui .opblock-tag,
-.swagger-ui .opblock .opblock-summary-description,
-.swagger-ui .btn {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* Título principal */
+/* Ocultar elementos desnecessários e dar destaque ao título */
 .swagger-ui .info .title {
-    color: #1a202c;
+    color: #ffffff !important;
+    font-size: 2.5rem !important;
+    font-weight: 900 !important;
+    letter-spacing: -1px;
+    text-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
 }
 
-/* Seções (Usuários, Gêneros, Filmes...) como cards */
-.swagger-ui .opblock-tag {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin-bottom: 8px;
-    color: #1a202c;
+.swagger-ui .info .description {
+    background: rgba(15, 23, 42, 0.6);
+    border-left: 4px solid #6366f1;
+    padding: 16px;
+    border-radius: 0 12px 12px 0;
 }
 
-.swagger-ui .opblock-tag:hover {
-    background: #edf2f7;
-}
-
-/* Blocos dos endpoints */
+/* Cartões de Endpoints (Blocos) com estilo Neon Glass */
 .swagger-ui .opblock {
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    overflow: hidden; /* evita o fundo colorido vazar nos cantos */
+    border-radius: 16px !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(15, 23, 42, 0.75) !important;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+    margin-bottom: 16px !important;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Botão "Try it out" (sem afetar o "Cancel") */
-.swagger-ui .btn.try-out__btn:not(.cancel) {
-    background-color: #3182ce;
-    color: #ffffff;
-    border: none;
-    border-radius: 4px;
-    transition: background-color 0.2s;
+.swagger-ui .opblock:hover {
+    border-color: rgba(99, 102, 241, 0.6) !important;
+    box-shadow: 0 10px 40px rgba(99, 102, 241, 0.25) !important;
+    transform: translateY(-2px);
 }
 
-.swagger-ui .btn.try-out__btn:not(.cancel):hover {
-    background-color: #2b6cb0;
+/* Identidade visual marcante para cada método HTTP */
+.swagger-ui .opblock.opblock-get {
+    background: linear-gradient(90deg, rgba(14, 116, 144, 0.15), rgba(15, 23, 42, 0.8)) !important;
+    border-left: 5px solid #0ea5e9 !important;
+}
+.swagger-ui .opblock.opblock-post {
+    background: linear-gradient(90deg, rgba(22, 101, 52, 0.15), rgba(15, 23, 42, 0.8)) !important;
+    border-left: 5px solid #22c55e !important;
+}
+.swagger-ui .opblock.opblock-put {
+    background: linear-gradient(90deg, rgba(180, 83, 9, 0.15), rgba(15, 23, 42, 0.8)) !important;
+    border-left: 5px solid #f59e0b !important;
+}
+.swagger-ui .opblock.opblock-patch {
+    background: linear-gradient(90deg, rgba(13, 148, 136, 0.15), rgba(15, 23, 42, 0.8)) !important;
+    border-left: 5px solid #14b8a6 !important;
+}
+.swagger-ui .opblock.opblock-delete {
+    background: linear-gradient(90deg, rgba(153, 27, 27, 0.15), rgba(15, 23, 42, 0.8)) !important;
+    border-left: 5px solid #ef4444 !important;
 }
 
-/* Botão "Execute" */
+/* Badges (Botões de indicação do método HTTP) */
+.swagger-ui .opblock .opblock-summary-method {
+    border-radius: 8px !important;
+    font-weight: 800 !important;
+    font-size: 13px !important;
+    padding: 6px 14px !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.swagger-ui .opblock-get .opblock-summary-method { background: #0284c7 !important; }
+.swagger-ui .opblock-post .opblock-summary-method { background: #16a34a !important; }
+.swagger-ui .opblock-put .opblock-summary-method { background: #d97706 !important; }
+.swagger-ui .opblock-patch .opblock-summary-method { background: #0d9488 !important; }
+.swagger-ui .opblock-delete .opblock-summary-method { background: #dc2626 !important; }
+
+/* Caminhos das rotas com visual futurista/terminal */
+.swagger-ui .opblock .opblock-summary-path {
+    color: #f8fafc !important;
+    font-family: 'Fira Code', monospace !important;
+    font-size: 15px !important;
+    font-weight: 600;
+}
+
+/* Botões com efeito Glow e gradiente */
 .swagger-ui .btn.execute {
-    background-color: #38a169;
-    border-color: #38a169;
-    border-radius: 4px;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4) !important;
+    border: none !important;
+    transition: all 0.2s ease;
 }
 
 .swagger-ui .btn.execute:hover {
-    background-color: #2f855a;
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important;
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6) !important;
+}
+
+.swagger-ui .btn.try-out__btn {
+    background-color: #1e293b !important;
+    color: #94a3b8 !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px !important;
+}
+
+.swagger-ui .btn.try-out__btn:hover {
+    background-color: #334155 !important;
+    color: #ffffff !important;
+}
+
+/* Campos de Input e Textarea estilizados */
+.swagger-ui input[type=text], .swagger-ui textarea, .swagger-ui select {
+    background-color: #020617 !important;
+    border: 1px solid #334155 !important;
+    color: #f8fafc !important;
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+}
+
+.swagger-ui input[type=text]:focus, .swagger-ui textarea:focus {
+    border-color: #6366f1 !important;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+/* Blocos de resposta JSON com aspeto de consola moderna */
+.swagger-ui .microlight, .swagger-ui .highlight-code {
+    background-color: #020617 !important;
+    border-radius: 12px !important;
+    border: 1px solid #1e293b !important;
+    padding: 16px !important;
+}
+
+/* ==========================================================================
+   ESTILIZAÇÃO AVANÇADA DE SCHEMAS E DESCRIÇÕES DE ROTAS
+   ========================================================================== */
+
+/* 1. Caixa principal da secção de Schemas */
+.swagger-ui section.models {
+    background: rgba(15, 23, 42, 0.85) !important;
+    border: 1px solid rgba(99, 102, 241, 0.3) !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    margin-top: 40px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(16px);
+}
+
+/* Título principal "Schemas" */
+.swagger-ui section.models h4 {
+    color: #f8fafc !important;
+    font-size: 1.5rem !important;
+    font-weight: 800 !important;
+    border-bottom: 2px solid #6366f1 !important;
+    padding-bottom: 10px !important;
+}
+
+/* 2. Cada modelo individual de Schema (blocos dos DTOs) */
+.swagger-ui .model-box {
+    background: #020617 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+    margin-top: 12px !important;
+}
+
+.swagger-ui .model-title {
+    color: #818cf8 !important;
+    font-weight: 700 !important;
+}
+
+.swagger-ui .model {
+    color: #cbd5e1 !important;
+    font-family: 'Fira Code', monospace !important;
+}
+
+/* 3. Descrições textuais das rotas */
+.swagger-ui .opblock .opblock-summary-description {
+    color: #94a3b8 !important;
+    font-size: 14px !important;
+    font-style: italic !important;
+}
+
+/* 4. Títulos das secções principais (Ex: Usuários, Géneros, Filmes) */
+.swagger-ui .opblock-tag {
+    color: #f8fafc !important;
+    border-bottom: 2px solid rgba(99, 102, 241, 0.4) !important;
+    padding-bottom: 12px !important;
+    margin-top: 35px !important;
+    font-size: 1.4rem !important;
+}
+
+.swagger-ui .opblock-tag small {
+    color: #94a3b8 !important;
+    font-size: 0.9rem !important;
+}
+
+/* Tabelas internas de respostas (Status Codes HTTP) */
+.swagger-ui table.responses-table td.response-col_status {
+    color: #38bdf8 !important;
+    font-weight: 700 !important;
+    font-family: monospace !important;
+}
+
+/* ==========================================================================
+   EFEITO CINEMATOGRÁFICO - ROLO DE FILME COMPLETO (35MM) NAS LATERAIS
+   ========================================================================== */
+
+/* 1. Rolo de Filme do Lado ESQUERDO */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: calc(45% - 820px); /* Posiciona a tira exatamente ao lado do conteúdo principal */
+    width: 140px;
+    height: 100vh;
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0.35;
+
+    /* Moldura da Película + Quadros de Filme */
+    background-color: rgba(15, 23, 42, 0.9);
+    border-left: 4px solid #6366f1;
+    border-right: 4px solid #6366f1;
+
+    /* Gradiente triplo: Furos esquerdos, Quadros transparentes (Frames) e Furos direitos */
+    background-image:
+        /* Perfurações da Esquerda */
+        linear-gradient(to bottom, #818cf8 0px, #818cf8 16px, transparent 16px, transparent 32px),
+        /* Divisórias horizontais dos quadros de filme (Frames) */
+        linear-gradient(to bottom, transparent 0px, transparent 110px, #6366f1 110px, #6366f1 114px),
+        /* Perfurações da Direita */
+        linear-gradient(to bottom, #818cf8 0px, #818cf8 16px, transparent 16px, transparent 32px);
+
+    background-size: 14px 32px, 100% 114px, 14px 32px;
+    background-position: 8px top, center top, 118px top;
+    background-repeat: repeat-y, repeat-y, repeat-y;
+
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.3);
+}
+
+/* 2. Rolo de Filme do Lado DIREITO */
+body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    right: calc(45% - 820px); /* Posiciona a tira exatamente ao lado do conteúdo principal */
+    width: 140px;
+    height: 100vh;
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0.35;
+
+    /* Moldura da Película + Quadros de Filme */
+    background-color: rgba(15, 23, 42, 0.9);
+    border-left: 4px solid #6366f1;
+    border-right: 4px solid #6366f1;
+
+    /* Gradiente triplo: Furos esquerdos, Quadros transparentes (Frames) e Furos direitos */
+    background-image:
+        /* Perfurações da Esquerda */
+        linear-gradient(to bottom, #818cf8 0px, #818cf8 16px, transparent 16px, transparent 32px),
+        /* Divisórias horizontais dos quadros de filme (Frames) */
+        linear-gradient(to bottom, transparent 0px, transparent 110px, #6366f1 110px, #6366f1 114px),
+        /* Perfurações da Direita */
+        linear-gradient(to bottom, #818cf8 0px, #818cf8 16px, transparent 16px, transparent 32px);
+
+    background-size: 14px 32px, 100% 114px, 14px 32px;
+    background-position: 8px top, center top, 118px top;
+    background-repeat: repeat-y, repeat-y, repeat-y;
+
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.3);
+}
+
+/* Oculta em ecrãs menores para manter a usabilidade */
+@media (max-width: 1650px) {
+    body::before, body::after {
+        display: none;
+    }
 }
