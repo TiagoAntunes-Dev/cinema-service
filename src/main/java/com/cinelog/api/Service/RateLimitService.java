@@ -3,7 +3,6 @@ package com.cinelog.api.Service;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
-import io.github.bucket4j.Refill;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -69,7 +68,10 @@ public class RateLimitService {
     private Bucket newBucket() {
         // Refill.greedy: os tokens voltam aos poucos (comportamento clássico do Token Bucket).
         // Refill.intervally (usado antes) devolvia todos os tokens de uma vez só ao fim do período.
-        Bandwidth limit = Bandwidth.classic(capacity, Refill.greedy(refillTokens, refillPeriod));
+        Bandwidth limit = Bandwidth.builder()
+            .capacity(capacity)
+            .refillGreedy(refillTokens, refillPeriod)
+            .build();
         return Bucket.builder()
                 .addLimit(limit)
                 .build();

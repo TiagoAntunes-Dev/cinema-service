@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /**
- * @SpringBootTest: Diz ao Spring Boot para carregar TODO o contexto da aplicação
+ * @SpringBootTest: Diz ao Spring Boot para carregar
  * (banco de dados, beans, controllers, services) antes de rodar os testes que estão aqui dentro.
  * É usado para criar Testes de Integração.
  */
