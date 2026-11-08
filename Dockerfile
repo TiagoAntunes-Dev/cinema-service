@@ -4,6 +4,11 @@ WORKDIR /app
 
 # Copia os ficheiros de configuração do Maven e o código fonte
 COPY . .
+
+# Dá permissão de execução ao Maven Wrapper
+RUN chmod +x mvnw
+
+# Compila o projeto
 RUN ./mvnw clean package -DskipTests
 
 # Estágio 2: Execução da aplicação em ambiente leve
