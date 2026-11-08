@@ -5,6 +5,7 @@ import com.cinelog.api.DTO.WatchListItemRequest;
 import com.cinelog.api.DTO.WatchListItemResponse;
 import com.cinelog.api.Entity.WatchStatus;
 import com.cinelog.api.Service.WatchListItemService;
+import com.cinelog.api.Service.IdempotencyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -36,12 +37,13 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
  * e o filme ("movie") — além dos links básicos (self, update, delete).
  */
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api")
 @Tag(name = "Itens da Watchlist", description = "Endpoints responsáveis pelos filmes dentro de cada watchlist (status e nota)")
 public class WatchListItemController {
 
     // Campo final: imutável após a construção (consistência com os outros controllers)
     private final WatchListItemService watchlistItemService;
+    private final IdempotencyService idempotencyService;
 
     // PagedResourcesAssembler: bean do Spring HATEOAS que transforma um Page<T> em PagedModel<T>,
     // já adicionando automaticamente os links de paginação (self, first, last, next, prev).
@@ -49,9 +51,11 @@ public class WatchListItemController {
 
     // Injeção via construtor: o Spring injeta automaticamente.
     public WatchListItemController(WatchListItemService watchlistItemService,
-                                   PagedResourcesAssembler<WatchListItemResponse> pagedAssembler) {
+                                   PagedResourcesAssembler<WatchListItemResponse> pagedAssembler,
+                                   IdempotencyService idempotencyService) {
         this.watchlistItemService = watchlistItemService;
         this.pagedAssembler = pagedAssembler;
+        this.idempotencyService = idempotencyService;
     }
 
     @PostMapping("/watchlist-items")
@@ -63,23 +67,32 @@ public class WatchListItemController {
             @ApiResponse(responseCode = "404", description = "Watchlist ou filme informado não existe",
                     content = @Content(schema = @Schema(implementation = APIError.class))),
             @ApiResponse(responseCode = "409", description = "O filme já está nesta watchlist",
+                    content = @Content(schema = @Schema(implementation = APIError.class))),
+            @ApiResponse(responseCode = "422", description = "A chave X-Idempotency-Key já foi usada com um corpo de requisição diferente",
                     content = @Content(schema = @Schema(implementation = APIError.class)))
     })
     public ResponseEntity<EntityModel<WatchListItemResponse>> createWatchlistItem(
+            @Parameter(description = "Chave única (ex.: um UUID) que torna este POST idempotente. Repetir a mesma chave com o mesmo corpo devolve a resposta original, sem criar outro registro. Opcional.", example = "7c9e6679-7425-40de-944b-e07fc1f90ae7")
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey,
             @Valid @RequestBody WatchListItemRequest request) {
-        WatchListItemResponse response = watchlistItemService.createWatchlistItem(request);
 
-        // Navegabilidade DUPLA: "watchlist" (a lista) e "movie" (o filme).
-        EntityModel<WatchListItemResponse> model = EntityModel.of(response,
-                linkTo(methodOn(WatchListItemController.class).getWatchlistItem(response.id())).withSelfRel(),
-                linkTo(methodOn(WatchListItemController.class).getAllWatchlistItems(null)).withRel("all-watchlist-items"),
-                linkTo(methodOn(WatchListController.class).getWatchList(response.watchlistId())).withRel("watchlist"),
-                linkTo(methodOn(MovieController.class).getMovie(response.movieId())).withRel("movie")
-        );
+        // Idempotência: se a mesma chave X-Idempotency-Key chegar de novo com o mesmo corpo, o IdempotencyService
+        // devolve a resposta guardada em vez de criar o registro outra vez. Sem o cabeçalho, cria normalmente.
+        return idempotencyService.execute(idempotencyKey, request, () -> {
+            WatchListItemResponse response = watchlistItemService.createWatchlistItem(request);
 
-        return ResponseEntity
-                .created(URI.create("/api/v1/watchlist-items/" + response.id()))
-                .body(model);
+            // Navegabilidade DUPLA: "watchlist" (a lista) e "movie" (o filme).
+            EntityModel<WatchListItemResponse> model = EntityModel.of(response,
+                    linkTo(methodOn(WatchListItemController.class).getWatchlistItem(response.id())).withSelfRel(),
+                    linkTo(methodOn(WatchListItemController.class).getAllWatchlistItems(null)).withRel("all-watchlist-items"),
+                    linkTo(methodOn(WatchListController.class).getWatchList(response.watchlistId())).withRel("watchlist"),
+                    linkTo(methodOn(MovieController.class).getMovie(response.movieId())).withRel("movie")
+            );
+
+            return ResponseEntity
+                    .created(URI.create("/api/watchlist-items/" + response.id()))
+                    .body(model);
+        });
     }
 
     @GetMapping("/watchlist-items/{id}")

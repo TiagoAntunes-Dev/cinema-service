@@ -3,7 +3,9 @@ package com.cinelog.api.Controllers; // Define o pacote onde o Controller está 
 import com.cinelog.api.DTO.APIError;
 import com.cinelog.api.DTO.MovieRequest;
 import com.cinelog.api.DTO.MovieResponse;
+import com.cinelog.api.DTO.MovieResponseV2;
 import com.cinelog.api.Service.MovieService;
+import com.cinelog.api.Service.IdempotencyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -35,20 +37,23 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
  * Cada resposta inclui um bloco "_links" com self, update, delete, all e navegabilidade para recursos relacionados.
  */
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api")
 @Tag(name = "Filmes", description = "Endpoints responsáveis pela gestão do catálogo de filmes")
 public class MovieController {
 
     private final MovieService movieService;
+    private final IdempotencyService idempotencyService;
 
     // PagedResourcesAssembler: bean do Spring HATEOAS que transforma um Page<T> em PagedModel<T>,
     // já adicionando automaticamente os links de paginação (self, first, last, next, prev).
     private final PagedResourcesAssembler<MovieResponse> pagedAssembler;
 
     public MovieController(MovieService movieService,
-                           PagedResourcesAssembler<MovieResponse> pagedAssembler) {
+                           PagedResourcesAssembler<MovieResponse> pagedAssembler,
+                           IdempotencyService idempotencyService) {
         this.movieService = movieService;
         this.pagedAssembler = pagedAssembler;
+        this.idempotencyService = idempotencyService;
     }
 
     @PostMapping("/movies")
@@ -58,29 +63,41 @@ public class MovieController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos (título vazio, ano anterior a 1888, duração não positiva...)",
                     content = @Content(schema = @Schema(implementation = APIError.class))),
             @ApiResponse(responseCode = "404", description = "Algum dos gêneros informados não existe",
+                    content = @Content(schema = @Schema(implementation = APIError.class))),
+            @ApiResponse(responseCode = "422", description = "A chave X-Idempotency-Key já foi usada com um corpo de requisição diferente",
                     content = @Content(schema = @Schema(implementation = APIError.class)))
     })
-    public ResponseEntity<EntityModel<MovieResponse>> createMovie(@Valid @RequestBody MovieRequest movieRequest) {
-        MovieResponse movieResponse = movieService.createMovie(movieRequest);
+    public ResponseEntity<EntityModel<MovieResponse>> createMovie(
+            @Parameter(description = "Chave única (ex.: um UUID) que torna este POST idempotente. Repetir a mesma chave com o mesmo corpo devolve a resposta original, sem criar outro registro. Opcional.", example = "7c9e6679-7425-40de-944b-e07fc1f90ae7")
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey,
+            @Valid @RequestBody MovieRequest movieRequest) {
 
-        // Envolve o DTO em um EntityModel e adiciona os links.
-        // "details" só é incluído se o filme tiver detalhes — senão o link daria 404.
-        // Como o DTO MovieResponse não traz essa informação, deixamos o link sempre presente
-        // (o cliente descobre que não há detalhes ao seguir o link).
-        EntityModel<MovieResponse> model = EntityModel.of(movieResponse,
-                linkTo(methodOn(MovieController.class).getMovie(movieResponse.id())).withSelfRel(),
-                linkTo(methodOn(MovieController.class).getAllMovies(null)).withRel("all-movies"),
-                linkTo(methodOn(MovieDetailsController.class).getMovieDetailsByMovie(movieResponse.id())).withRel("details")
-        );
+        // Idempotência: se a mesma chave X-Idempotency-Key chegar de novo com o mesmo corpo, o IdempotencyService
+        // devolve a resposta guardada em vez de criar o registro outra vez. Sem o cabeçalho, cria normalmente.
+        return idempotencyService.execute(idempotencyKey, movieRequest, () -> {
+            MovieResponse movieResponse = movieService.createMovie(movieRequest);
 
-        // Status 201 (Created) + cabeçalho "Location" com a URI do novo recurso + DTO com links no corpo
-        return ResponseEntity
-                .created(URI.create("/api/v1/movies/" + movieResponse.id()))
-                .body(model);
+            // Envolve o DTO em um EntityModel e adiciona os links.
+            // "details" só é incluído se o filme tiver detalhes — senão o link daria 404.
+            // Como o DTO MovieResponse não traz essa informação, deixamos o link sempre presente
+            // (o cliente descobre que não há detalhes ao seguir o link).
+            EntityModel<MovieResponse> model = EntityModel.of(movieResponse,
+                    linkTo(methodOn(MovieController.class).getMovie(movieResponse.id())).withSelfRel(),
+                    linkTo(methodOn(MovieController.class).getAllMovies(null)).withRel("all-movies"),
+                    linkTo(methodOn(MovieDetailsController.class).getMovieDetailsByMovie(movieResponse.id())).withRel("details")
+            );
+
+            // Status 201 (Created) + cabeçalho "Location" com a URI do novo recurso + DTO com links no corpo
+            return ResponseEntity
+                    .created(URI.create("/api/movies/" + movieResponse.id()))
+                    .body(model);
+        });
     }
 
-    @GetMapping("/movies/{id}")
-    @Operation(summary = "Buscar filme por ID", description = "Retorna os dados de um filme, incluindo os gêneros.")
+    // VERSIONAMENTO: esta é a versão 1 do endpoint (X-API-Version: 1, a padrão). Ela fica "congelada" em "1";
+    // a versão 2 (abaixo) vale da versão 2 em diante. Veja WebConfig e OpenApiVersionGroups.
+    @GetMapping(value = "/movies/{id}", version = "1")
+    @Operation(summary = "Buscar filme por ID", description = "Retorna os dados de um filme, incluindo os gêneros. (Versão 1)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Filme encontrado com sucesso"),
             @ApiResponse(responseCode = "404", description = "Filme não encontrado para o ID especificado",
@@ -94,6 +111,32 @@ public class MovieController {
         // Navegabilidade: cada filme aponta para seus detalhes, seus gêneros e pode ser atualizado/deletado.
         EntityModel<MovieResponse> model = EntityModel.of(movieResponse,
                 linkTo(methodOn(MovieController.class).getMovie(id)).withSelfRel(),
+                linkTo(methodOn(MovieController.class).getAllMovies(null)).withRel("all-movies"),
+                linkTo(methodOn(MovieController.class).updateMovie(id, null)).withRel("update"),
+                linkTo(methodOn(MovieController.class).deleteMovie(id)).withRel("delete"),
+                linkTo(methodOn(MovieDetailsController.class).getMovieDetailsByMovie(id)).withRel("details")
+        );
+
+        return ResponseEntity.ok(model);
+    }
+
+    // VERSÃO 2 do mesmo endpoint (X-API-Version: 2). O "+" significa "da versão 2 em diante".
+    // Mudanças em relação à v1: "duracao" virou "duracaoMinutos" e "generos" agora é uma lista de nomes.
+    @GetMapping(value = "/movies/{id}", version = "2+")
+    @Operation(summary = "Buscar filme por ID (v2)", description = "Retorna os dados de um filme. Na versão 2, a duração vem em 'duracaoMinutos' e os gêneros vêm como lista de nomes.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Filme encontrado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Filme não encontrado para o ID especificado",
+                    content = @Content(schema = @Schema(implementation = APIError.class)))
+    })
+    public ResponseEntity<EntityModel<MovieResponseV2>> getMovieV2(
+            @Parameter(description = "ID numérico do filme a ser buscado", example = "1")
+            @PathVariable long id) {
+        // O Service é o mesmo da v1; só a forma da resposta muda.
+        MovieResponseV2 movieResponse = MovieResponseV2.from(movieService.findById(id));
+
+        EntityModel<MovieResponseV2> model = EntityModel.of(movieResponse,
+                linkTo(methodOn(MovieController.class).getMovieV2(id)).withSelfRel(),
                 linkTo(methodOn(MovieController.class).getAllMovies(null)).withRel("all-movies"),
                 linkTo(methodOn(MovieController.class).updateMovie(id, null)).withRel("update"),
                 linkTo(methodOn(MovieController.class).deleteMovie(id)).withRel("delete"),

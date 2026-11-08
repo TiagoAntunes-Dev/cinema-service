@@ -4,6 +4,7 @@ import com.cinelog.api.DTO.APIError;
 import com.cinelog.api.DTO.WatchListRequest;
 import com.cinelog.api.DTO.WatchListResponse;
 import com.cinelog.api.Service.WatchListService;
+import com.cinelog.api.Service.IdempotencyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -35,20 +36,23 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
  * Cada watchlist aponta para seu dono ("user") e para seus itens ("items") — navegabilidade entre recursos.
  */
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api")
 @Tag(name = "Watchlists", description = "Endpoints responsáveis pela gestão das watchlists (listas de filmes dos usuários)")
 public class WatchListController {
 
     private final WatchListService watchListService;
+    private final IdempotencyService idempotencyService;
 
     // PagedResourcesAssembler: bean do Spring HATEOAS que transforma um Page<T> em PagedModel<T>,
     // já adicionando automaticamente os links de paginação (self, first, last, next, prev).
     private final PagedResourcesAssembler<WatchListResponse> pagedAssembler;
 
     public WatchListController(WatchListService watchListService,
-                               PagedResourcesAssembler<WatchListResponse> pagedAssembler) {
+                               PagedResourcesAssembler<WatchListResponse> pagedAssembler,
+                               IdempotencyService idempotencyService) {
         this.watchListService = watchListService;
         this.pagedAssembler = pagedAssembler;
+        this.idempotencyService = idempotencyService;
     }
 
     @PostMapping("/watchlists")
@@ -58,25 +62,34 @@ public class WatchListController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos (nome vazio ou fora de 3 a 100 caracteres, userId ausente...)",
                     content = @Content(schema = @Schema(implementation = APIError.class))),
             @ApiResponse(responseCode = "404", description = "Usuário informado não existe",
+                    content = @Content(schema = @Schema(implementation = APIError.class))),
+            @ApiResponse(responseCode = "422", description = "A chave X-Idempotency-Key já foi usada com um corpo de requisição diferente",
                     content = @Content(schema = @Schema(implementation = APIError.class)))
     })
     public ResponseEntity<EntityModel<WatchListResponse>> createWatchList(
+            @Parameter(description = "Chave única (ex.: um UUID) que torna este POST idempotente. Repetir a mesma chave com o mesmo corpo devolve a resposta original, sem criar outro registro. Opcional.", example = "7c9e6679-7425-40de-944b-e07fc1f90ae7")
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey,
             @Valid @RequestBody WatchListRequest request) {
-        WatchListResponse response = watchListService.createWatchList(request);
 
-        // Envolve o DTO em EntityModel e adiciona links.
-        // Navegabilidade: "user" leva ao dono; "items" leva aos itens da lista.
-        EntityModel<WatchListResponse> model = EntityModel.of(response,
-                linkTo(methodOn(WatchListController.class).getWatchList(response.id())).withSelfRel(),
-                linkTo(methodOn(WatchListController.class).getAllWatchLists(null)).withRel("all-watchlists"),
-                linkTo(methodOn(WatchListController.class).getWatchListsByUser(response.userId(), null)).withRel("by-user"),
-                linkTo(methodOn(WatchListItemController.class).getItemsByWatchList(response.id(), null, null)).withRel("items"),
-                linkTo(methodOn(UserController.class).getUser(response.userId())).withRel("user")
-        );
+        // Idempotência: se a mesma chave X-Idempotency-Key chegar de novo com o mesmo corpo, o IdempotencyService
+        // devolve a resposta guardada em vez de criar o registro outra vez. Sem o cabeçalho, cria normalmente.
+        return idempotencyService.execute(idempotencyKey, request, () -> {
+            WatchListResponse response = watchListService.createWatchList(request);
 
-        return ResponseEntity
-                .created(URI.create("/api/v1/watchlists/" + response.id()))
-                .body(model);
+            // Envolve o DTO em EntityModel e adiciona links.
+            // Navegabilidade: "user" leva ao dono; "items" leva aos itens da lista.
+            EntityModel<WatchListResponse> model = EntityModel.of(response,
+                    linkTo(methodOn(WatchListController.class).getWatchList(response.id())).withSelfRel(),
+                    linkTo(methodOn(WatchListController.class).getAllWatchLists(null)).withRel("all-watchlists"),
+                    linkTo(methodOn(WatchListController.class).getWatchListsByUser(response.userId(), null)).withRel("by-user"),
+                    linkTo(methodOn(WatchListItemController.class).getItemsByWatchList(response.id(), null, null)).withRel("items"),
+                    linkTo(methodOn(UserController.class).getUser(response.userId())).withRel("user")
+            );
+
+            return ResponseEntity
+                    .created(URI.create("/api/watchlists/" + response.id()))
+                    .body(model);
+        });
     }
 
     @GetMapping("/watchlists/{id}")

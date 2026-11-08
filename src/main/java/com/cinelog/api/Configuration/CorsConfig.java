@@ -42,8 +42,9 @@ public class CorsConfig {
                         // para a Parte 2 (API Key, idempotência e versionamento).
                         .allowedHeaders("Content-Type", "Accept", "X-API-Key", "X-Idempotency-Key", "X-API-Version")
                         // Cabeçalhos que o JavaScript do navegador pode LER na resposta.
-                        // Sem isto, o front-end não enxergaria o Location nem o Retry-After do 429.
-                        .exposedHeaders("Location", "Retry-After", "X-RateLimit-Limit", "X-RateLimit-Remaining")
+                        // Sem isto, o front-end não enxergaria o Location, o Retry-After do 429
+                        // nem o Idempotent-Replayed (que avisa que a resposta é uma repetição guardada).
+                        .exposedHeaders("Location", "Retry-After", "X-RateLimit-Limit", "X-RateLimit-Remaining", "Idempotent-Replayed")
                         // A API não usa cookies, então não precisa de credenciais.
                         // (Credenciais + origem "*" seria uma combinação insegura e o Spring nem aceita.)
                         .allowCredentials(false)

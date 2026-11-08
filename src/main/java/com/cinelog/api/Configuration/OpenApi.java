@@ -64,7 +64,7 @@ public class OpenApi {
 
                                 | | Informação |
                                 |---|---|
-                                | 🔗 **URL base** | `http://localhost:8080/api/v1` (desenvolvimento) |
+                                | 🔗 **URL base** | `http://localhost:8080/api` (desenvolvimento) |
                                 | 🧭 **Rotas** | Substantivos no plural: `/users`, `/genres`, `/movies`, `/movie-details`, `/watchlists`, `/watchlist-items` |
                                 | 📦 **Formato** | JSON com codificação UTF-8 (acentos são aceitos) |
                                 | 🔓 **Autenticação** | Não exigida nesta versão |
@@ -81,6 +81,63 @@ public class OpenApi {
                                 |---|---|---|
                                 | `Content-Type` | Em `POST`, `PUT` e `PATCH` | `application/json` |
                                 | `Accept` | Opcional | `application/json` ou `*/*` |
+                                | `X-API-Version` | Opcional | Versão da API. Padrão: `1`. Veja a seção de versionamento abaixo |
+                                | `X-API-Key` | **Obrigatório na versão 2** | Chave de API. Use o botão **Authorize** na tela da versão 2 |
+                                | `X-Idempotency-Key` | Opcional, nos `POST` da versão 2 | Texto único (ex.: UUID). Veja a seção de idempotência abaixo |
+
+                                ---
+
+                                ## 🔖 Versionamento
+
+                                A versão da API é informada no **cabeçalho** `X-API-Version`, e **não na URL**: as rotas são sempre `/api/...`.
+
+                                | Requisição | Resultado |
+                                |---|---|
+                                | Sem o cabeçalho | Usa a versão padrão (`1`) |
+                                | `X-API-Version: 1` | Versão 1 |
+                                | `X-API-Version: 2` | Versão 2 |
+                                | `X-API-Version: 99` (inexistente) ou `abc` (formato inválido) | `400 Bad Request` |
+
+                                > 🔀 **Cada versão tem a sua tela:** use o seletor **Select a definition** (no topo da página) para alternar entre a
+                                > versão 1 e a versão 2.
+
+                                | Recurso | Versão 1 (simples) | Versão 2 (completa) |
+                                |---|---|---|
+                                | Chave de API (`X-API-Key`) | não exige | **obrigatória** (`401`) |
+                                | Rate limit | sem limite | por chave de API (`429` + `Retry-After`) |
+                                | Idempotência (`X-Idempotency-Key`) | ignora | nos `POST` (`422` se o corpo mudar) |
+                                | `GET /movies/{id}` | `duracao` e gêneros como objetos | `duracaoMinutos` e gêneros como texto |
+
+                                > 🔑 Na tela da **versão 2**, clique em **Authorize** e informe a chave de API uma única vez.
+                                > Chave de demonstração: `cinelog-demo-key-123`.
+
+                                ---
+
+                                ## 🚦 Limite de requisições (Rate Limit)
+
+                                **Somente na versão 2.** A API usa o algoritmo **Token Bucket**: cada cliente (identificado pela chave de API) tem um "balde" de tokens.
+                                Cada requisição gasta **1 token** e o balde é reabastecido aos poucos. Com o balde vazio, a API
+                                responde `429 Too Many Requests`. Valores padrão: rajada de **100 requisições** e **100 tokens por minuto**.
+
+                                | Cabeçalho de resposta | Quando aparece | Significado |
+                                |---|---|---|
+                                | `X-RateLimit-Limit` | Sempre | Tamanho máximo do balde |
+                                | `X-RateLimit-Remaining` | Sempre | Tokens que ainda restam (`0` quando bloqueado) |
+                                | `Retry-After` | Só no `429` | Segundos de espera antes de tentar de novo |
+
+                                ---
+
+                                ## 🔁 Idempotência
+
+                                **Somente na versão 2.** Todos os `POST` aceitam o cabeçalho opcional **`X-Idempotency-Key`**, que evita registros duplicados quando
+                                o cliente repete a requisição (clique duplo, retry após timeout).
+
+                                | Situação | Resultado |
+                                |---|---|
+                                | Chave nova | Executa normalmente e guarda a resposta por 24 horas |
+                                | Mesma chave e **mesmo corpo** | Devolve a resposta original (`201`, `Location` e corpo) com o cabeçalho `Idempotent-Replayed: true`, sem criar outro registro |
+                                | Mesma chave e **corpo diferente** | `422 Unprocessable Entity` |
+                                | Sem o cabeçalho | Comportamento normal |
 
                                 ---
 
@@ -124,7 +181,7 @@ public class OpenApi {
                                 | `size` | Quantidade de itens por página | `20` |
                                 | `sort` | Campo e direção da ordenação | sem ordenação |
 
-                                ** Exemplo: ** `GET /api/v1/movies?page=0&size=10&sort=titulo,asc`
+                                ** Exemplo: ** `GET /api/movies?page=0&size=10&sort=titulo,asc`
 
                                 A resposta traz a lista de itens, as informações da página (`page`: `size`,
                                 `totalElements`, `totalPages` e `number`) e os links para navegar entre as páginas.
@@ -146,9 +203,14 @@ public class OpenApi {
                                 | 🟢 | `200` | OK | Consulta ou atualização bem-sucedida |
                                 | 🟢 | `201` | Created | Recurso criado (o header `Location` traz a URL dele) |
                                 | 🟢 | `204` | No Content | Recurso removido, sem corpo de resposta |
-                                | 🟠 | `400` | Bad Request | Dados inválidos ou regra de negócio violada |
+                                | 🟠 | `400` | Bad Request | Dados inválidos, JSON mal formado, parâmetro com tipo errado, versão da API inexistente ou regra de negócio violada |
                                 | 🟠 | `404` | Not Found | Recurso não encontrado |
                                 | 🟠 | `409` | Conflict | Registro duplicado ou ainda em uso |
+                                | 🟠 | `401` | Unauthorized | Chave de API ausente ou inválida (versão 2) |
+                                | 🟠 | `405` | Method Not Allowed | Método HTTP não aceito pela rota |
+                                | 🟠 | `415` | Unsupported Media Type | Corpo enviado sem ser `application/json` |
+                                | 🟠 | `422` | Unprocessable Entity | `X-Idempotency-Key` reutilizada com um corpo diferente |
+                                | 🟠 | `429` | Too Many Requests | Limite de requisições excedido (veja o `Retry-After`) |
                                 | 🔴 | `500` | Internal Server Error | Erro inesperado no servidor |
 
                                 ### ❌ Formato dos erros
@@ -161,7 +223,23 @@ public class OpenApi {
                                   "status": 404,
                                   "errorMessage": "NOT_FOUND",
                                   "message": "Filme não encontrado com o ID: 999",
-                                  "path": "/api/v1/movies/999"
+                                  "path": "/api/movies/999"
+                                }
+                                ```
+
+                                Nos erros de **validação** (`400`) a resposta também traz a lista `errors`, com um item por campo inválido:
+
+                                ```json
+                                {
+                                  "timestamp": "2026-10-04T14:55:57",
+                                  "status": 400,
+                                  "errorMessage": "BAD_REQUEST",
+                                  "message": "Erro de validação: 2 problema(s) encontrado(s). Veja os detalhes em 'errors'.",
+                                  "path": "/api/users",
+                                  "errors": [
+                                    "email: O email deve ser um endereço válido",
+                                    "name: O nome não pode estar em branco"
+                                  ]
                                 }
                                 ```
 

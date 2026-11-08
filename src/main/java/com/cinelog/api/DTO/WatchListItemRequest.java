@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 /**
  * WatchlistItemRequest: DTO de ENTRADA para adicionar ou atualizar um filme dentro de uma watchlist.
@@ -14,6 +15,7 @@ import jakarta.validation.constraints.NotNull;
 public record WatchListItemRequest(
 
         @NotNull(message = "O id da watchlist é obrigatório")
+        @Positive(message = "O id da watchlist deve ser maior que zero")
         @Schema(
                 description = "Id da watchlist que receberá o filme",
                 example = "1",
@@ -22,6 +24,7 @@ public record WatchListItemRequest(
         Long watchlistId,
 
         @NotNull(message = "O id do filme é obrigatório")
+        @Positive(message = "O id do filme deve ser maior que zero")
         @Schema(
                 description = "Id do filme a ser adicionado",
                 example = "1",

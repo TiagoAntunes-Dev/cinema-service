@@ -4,6 +4,7 @@ import com.cinelog.api.DTO.APIError;
 import com.cinelog.api.DTO.UserRequest;
 import com.cinelog.api.DTO.UserResponse;
 import com.cinelog.api.Service.UserService;
+import com.cinelog.api.Service.IdempotencyService;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,17 +29,20 @@ import java.net.URI;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api")
 @Tag(name = "Usuários", description = "Endpoints responsáveis pela gestão de usuários")
 public class UserController {
 
     private final UserService userService;
+    private final IdempotencyService idempotencyService;
     private final PagedResourcesAssembler<UserResponse> pagedAssembler;
 
     public UserController(UserService userService,
-                          PagedResourcesAssembler<UserResponse> pagedAssembler) {
+                          PagedResourcesAssembler<UserResponse> pagedAssembler,
+                          IdempotencyService idempotencyService) {
         this.userService = userService;
         this.pagedAssembler = pagedAssembler;
+        this.idempotencyService = idempotencyService;
     }
 
     @Hidden
@@ -55,24 +59,34 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos",
                     content = @Content(schema = @Schema(implementation = APIError.class))),
             @ApiResponse(responseCode = "409", description = "E-mail já cadastrado",
+                    content = @Content(schema = @Schema(implementation = APIError.class))),
+            @ApiResponse(responseCode = "422", description = "A chave X-Idempotency-Key já foi usada com um corpo de requisição diferente",
                     content = @Content(schema = @Schema(implementation = APIError.class)))
     })
-    public ResponseEntity<EntityModel<UserResponse>> createUser(@Valid @RequestBody UserRequest userRequest) {
+    public ResponseEntity<EntityModel<UserResponse>> createUser(
+            @Parameter(description = "Chave única (ex.: um UUID) que torna este POST idempotente. Repetir a mesma chave com o mesmo corpo devolve a resposta original, sem criar outro registro. Opcional.", example = "7c9e6679-7425-40de-944b-e07fc1f90ae7")
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey,
+            @Valid @RequestBody UserRequest userRequest) {
 
-        // ✅ Agora o service já retorna o DTO pronto
-        UserResponse userResponse = userService.createUser(userRequest);
+        // Idempotência: se a mesma chave X-Idempotency-Key chegar de novo com o mesmo corpo, o IdempotencyService
+        // devolve a resposta guardada em vez de criar o registro outra vez. Sem o cabeçalho, cria normalmente.
+        return idempotencyService.execute(idempotencyKey, userRequest, () -> {
 
-        EntityModel<UserResponse> model = EntityModel.of(userResponse,
-                linkTo(methodOn(UserController.class).getUser(userResponse.id())).withSelfRel(),
-                linkTo(methodOn(UserController.class).getAllUsers(null)).withRel("all-users"),
+            // ✅ Agora o service já retorna o DTO pronto
+            UserResponse userResponse = userService.createUser(userRequest);
 
-                // Usuário pode acessar suas Watchlist com um clique
-                linkTo(methodOn(WatchListController.class).getWatchListsByUser(userResponse.id(), null)).withRel("watchlists")
-        );
+            EntityModel<UserResponse> model = EntityModel.of(userResponse,
+                    linkTo(methodOn(UserController.class).getUser(userResponse.id())).withSelfRel(),
+                    linkTo(methodOn(UserController.class).getAllUsers(null)).withRel("all-users"),
 
-        return ResponseEntity
-                .created(URI.create("/api/v1/users/" + userResponse.id()))
-                .body(model);
+                    // Usuário pode acessar suas Watchlist com um clique
+                    linkTo(methodOn(WatchListController.class).getWatchListsByUser(userResponse.id(), null)).withRel("watchlists")
+            );
+
+            return ResponseEntity
+                    .created(URI.create("/api/users/" + userResponse.id()))
+                    .body(model);
+        });
     }
 
     @GetMapping("/users/{id}")

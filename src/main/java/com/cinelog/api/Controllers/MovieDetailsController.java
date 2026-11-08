@@ -5,6 +5,7 @@ import com.cinelog.api.DTO.MovieDetailsPatchRequest;
 import com.cinelog.api.DTO.MovieDetailsRequest;
 import com.cinelog.api.DTO.MovieDetailsResponse;
 import com.cinelog.api.Service.MovieDetailsService;
+import com.cinelog.api.Service.IdempotencyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -36,20 +37,23 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
  * Cada resposta inclui um bloco "_links" com self, update, delete e navegabilidade para o filme dono.
  */
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api")
 @Tag(name = "Detalhes dos Filmes", description = "Endpoints responsáveis pelos detalhes dos filmes (sinopse, orçamento, país de origem...)")
 public class MovieDetailsController {
 
     private final MovieDetailsService movieDetailsService;
+    private final IdempotencyService idempotencyService;
 
     // PagedResourcesAssembler: bean do Spring HATEOAS que transforma um Page<T> em PagedModel<T>,
     // já adicionando automaticamente os links de paginação (self, first, last, next, prev).
     private final PagedResourcesAssembler<MovieDetailsResponse> pagedAssembler;
 
     public MovieDetailsController(MovieDetailsService movieDetailsService,
-                                  PagedResourcesAssembler<MovieDetailsResponse> pagedAssembler) {
+                                  PagedResourcesAssembler<MovieDetailsResponse> pagedAssembler,
+                                  IdempotencyService idempotencyService) {
         this.movieDetailsService = movieDetailsService;
         this.pagedAssembler = pagedAssembler;
+        this.idempotencyService = idempotencyService;
     }
 
     @PostMapping("/movie-details")
@@ -61,24 +65,33 @@ public class MovieDetailsController {
             @ApiResponse(responseCode = "404", description = "Filme informado não existe",
                     content = @Content(schema = @Schema(implementation = APIError.class))),
             @ApiResponse(responseCode = "409", description = "O filme já possui detalhes cadastrados",
+                    content = @Content(schema = @Schema(implementation = APIError.class))),
+            @ApiResponse(responseCode = "422", description = "A chave X-Idempotency-Key já foi usada com um corpo de requisição diferente",
                     content = @Content(schema = @Schema(implementation = APIError.class)))
     })
     public ResponseEntity<EntityModel<MovieDetailsResponse>> createMovieDetails(
+            @Parameter(description = "Chave única (ex.: um UUID) que torna este POST idempotente. Repetir a mesma chave com o mesmo corpo devolve a resposta original, sem criar outro registro. Opcional.", example = "7c9e6679-7425-40de-944b-e07fc1f90ae7")
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey,
             @Valid @RequestBody MovieDetailsRequest request) {
-        MovieDetailsResponse response = movieDetailsService.createMovieDetails(request);
 
-        // Envolve o DTO em EntityModel e adiciona links.
-        // Navegabilidade: do registro de detalhes, sobe para o filme dono (movie).
-        EntityModel<MovieDetailsResponse> model = EntityModel.of(response,
-                linkTo(methodOn(MovieDetailsController.class).getMovieDetails(response.id())).withSelfRel(),
-                linkTo(methodOn(MovieDetailsController.class).getAllMovieDetails(null)).withRel("all-movie-details"),
-                linkTo(methodOn(MovieController.class).getMovie(response.movieId())).withRel("movie")
-        );
+        // Idempotência: se a mesma chave X-Idempotency-Key chegar de novo com o mesmo corpo, o IdempotencyService
+        // devolve a resposta guardada em vez de criar o registro outra vez. Sem o cabeçalho, cria normalmente.
+        return idempotencyService.execute(idempotencyKey, request, () -> {
+            MovieDetailsResponse response = movieDetailsService.createMovieDetails(request);
 
-        // Status 201 (Created) + cabeçalho "Location" com a URI do novo recurso + DTO com links no corpo
-        return ResponseEntity
-                .created(URI.create("/api/v1/movie-details/" + response.id()))
-                .body(model);
+            // Envolve o DTO em EntityModel e adiciona links.
+            // Navegabilidade: do registro de detalhes, sobe para o filme dono (movie).
+            EntityModel<MovieDetailsResponse> model = EntityModel.of(response,
+                    linkTo(methodOn(MovieDetailsController.class).getMovieDetails(response.id())).withSelfRel(),
+                    linkTo(methodOn(MovieDetailsController.class).getAllMovieDetails(null)).withRel("all-movie-details"),
+                    linkTo(methodOn(MovieController.class).getMovie(response.movieId())).withRel("movie")
+            );
+
+            // Status 201 (Created) + cabeçalho "Location" com a URI do novo recurso + DTO com links no corpo
+            return ResponseEntity
+                    .created(URI.create("/api/movie-details/" + response.id()))
+                    .body(model);
+        });
     }
 
     @GetMapping("/movie-details/{id}")

@@ -19,7 +19,7 @@ import java.util.Set;
 public record MovieRequest(
 
         @NotBlank(message = "O título não pode estar em branco")
-        @Size(min = 2, max = 150, message = "O título deve ter no 2 e 150 caracteres")
+        @Size(min = 2, max = 150, message = "O título deve ter entre 2 e 150 caracteres")
         @Schema(
                 description = "Título do filme",
                 example = "Interestelar",
@@ -64,6 +64,6 @@ public record MovieRequest(
         )
 
         // Filme pode ser criado sem Genre - Embora Incomum.
-        Set<Long> genreIds
+        Set<@NotNull(message = "Os ids dos gêneros não podem ser nulos") @Positive(message = "Os ids dos gêneros devem ser maiores que zero") Long> genreIds
 ) {
 }

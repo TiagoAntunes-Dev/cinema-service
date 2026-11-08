@@ -17,42 +17,52 @@
     <description>API RESTful de catálogo de filmes e watchlists (projeto final de Spring Boot)</description>
 
     <properties>
-        <!-- O enunciado exige Java 17 ou superior. Com 17, o projeto compila e roda em qualquer JDK 17+ -->
+        <!-- Versão do Java -->
         <java.version>17</java.version>
+        <!-- Codificação para evitar MalformedInputException durante a filtragem de recursos -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
     <dependencies>
-        <!-- Console web do banco H2 (/h2-console) -->
+        <!-- Driver JDBC do MySQL -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-h2console</artifactId>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
         </dependency>
+
         <!-- Spring Data JPA + Hibernate: persistência e repositories -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
+
         <!-- Bucket4j Core (Rate Limiting) -->
         <dependency>
             <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j-core</artifactId>
             <version>8.10.1</version>
         </dependency>
+
         <!-- Spring HATEOAS: links nas respostas (EntityModel, CollectionModel, PagedModel) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-hateoas</artifactId>
         </dependency>
+
         <!-- Bean Validation (@NotBlank, @Size, @Valid...) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+
         <!-- Spring MVC: controllers REST -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
+
         <!-- Reinício automático da aplicação durante o desenvolvimento -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -60,12 +70,14 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
-        <!-- Banco H2 em memória -->
+
+        <!-- Banco H2 mantido apenas para testes automáticos unitários e de integração -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>runtime</scope>
+            <scope>test</scope>
         </dependency>
+
         <!-- Swagger UI / OpenAPI (documentação da API) -->
         <dependency>
             <groupId>org.springdoc</groupId>

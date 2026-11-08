@@ -15,11 +15,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * RateLimitService: aplica o algoritmo TOKEN BUCKET (balde de fichas) para limitar as requisições.
  *
  * Como o Token Bucket funciona:
- * - Cada cliente (identificado pelo IP) tem o seu próprio "balde" com uma CAPACIDADE máxima de tokens.
+ * - Cada cliente (identificado pela chave de API, ou pelo IP se não houver chave) tem o seu próprio "balde"
+ *   com uma CAPACIDADE máxima de tokens.
  * - Cada requisição gasta 1 token. Se o balde está vazio, a requisição é recusada (HTTP 429).
  * - O balde é reabastecido aos poucos (ex.: 100 tokens por minuto = 1 token a cada 0,6 s).
  * - Como o balde começa cheio, o cliente pode fazer uma "rajada" de requisições (burst) e depois
  *   precisa respeitar o ritmo de reabastecimento.
+ *
+ * Só vale na versão 2 da API (ver RateLimitInterceptor).
  *
  * Os valores podem ser mudados no application.properties, sem mexer no código:
  *   rate-limit.capacity       -> tamanho do balde (máximo de requisições em rajada)

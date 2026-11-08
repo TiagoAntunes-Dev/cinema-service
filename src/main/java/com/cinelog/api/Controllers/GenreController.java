@@ -4,6 +4,7 @@ import com.cinelog.api.DTO.APIError;
 import com.cinelog.api.DTO.GenreRequest;
 import com.cinelog.api.DTO.GenreResponse;
 import com.cinelog.api.Service.GenreService;
+import com.cinelog.api.Service.IdempotencyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -29,17 +30,18 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 /**
  * GenreController: recebe as requisições HTTP sobre gêneros e delega o trabalho ao GenreService.
- * Todas as rotas começam com "/api/v1" e usam o substantivo no plural: "/genres".
+ * Todas as rotas começam com "/api" e usam o substantivo no plural: "/genres".
  *
  * HATEOAS: as respostas agora vêm envoltas em EntityModel (recurso único) ou PagedModel (listas paginadas).
  * Isso adiciona um bloco "_links" em cada JSON, com URLs para self, update, delete, etc.
  */
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api")
 @Tag(name = "Gêneros", description = "Endpoints responsáveis pela gestão de gêneros de filmes")
 public class GenreController {
 
     private final GenreService genreService;
+    private final IdempotencyService idempotencyService;
 
     // PagedResourcesAssembler: bean do Spring HATEOAS que transforma um Page<T> em PagedModel<T>,
     // já adicionando automaticamente os links de paginação (self, first, last, next, prev).
@@ -47,9 +49,11 @@ public class GenreController {
 
     // Injeção de dependência via Construtor. É ativada automaticamente pelo Spring.
     public GenreController(GenreService genreService,
-                           PagedResourcesAssembler<GenreResponse> pagedAssembler) {
+                           PagedResourcesAssembler<GenreResponse> pagedAssembler,
+                           IdempotencyService idempotencyService) {
         this.genreService = genreService;
         this.pagedAssembler = pagedAssembler;
+        this.idempotencyService = idempotencyService;
     }
 
     /**
@@ -64,22 +68,32 @@ public class GenreController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos (nome vazio ou com mais de 50 caracteres)",
                     content = @Content(schema = @Schema(implementation = APIError.class))),
             @ApiResponse(responseCode = "409", description = "Já existe um gênero com esse nome",
+                    content = @Content(schema = @Schema(implementation = APIError.class))),
+            @ApiResponse(responseCode = "422", description = "A chave X-Idempotency-Key já foi usada com um corpo de requisição diferente",
                     content = @Content(schema = @Schema(implementation = APIError.class)))
     })
-    public ResponseEntity<EntityModel<GenreResponse>> createGenre(@Valid @RequestBody GenreRequest genreRequest) {
-        GenreResponse genreResponse = genreService.createGenre(genreRequest);
+    public ResponseEntity<EntityModel<GenreResponse>> createGenre(
+            @Parameter(description = "Chave única (ex.: um UUID) que torna este POST idempotente. Repetir a mesma chave com o mesmo corpo devolve a resposta original, sem criar outro registro. Opcional.", example = "7c9e6679-7425-40de-944b-e07fc1f90ae7")
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey,
+            @Valid @RequestBody GenreRequest genreRequest) {
 
-        // Envolve o DTO em um EntityModel e adiciona os links.
-        // methodOn(GenreController.class).getGenre(...) gera a URL real do endpoint de busca por ID.
-        EntityModel<GenreResponse> model = EntityModel.of(genreResponse,
-                linkTo(methodOn(GenreController.class).getGenre(genreResponse.id())).withSelfRel(),
-                linkTo(methodOn(GenreController.class).getAllGenres(null)).withRel("all-genres")
-        );
+        // Idempotência: se a mesma chave X-Idempotency-Key chegar de novo com o mesmo corpo, o IdempotencyService
+        // devolve a resposta guardada em vez de criar o registro outra vez. Sem o cabeçalho, cria normalmente.
+        return idempotencyService.execute(idempotencyKey, genreRequest, () -> {
+            GenreResponse genreResponse = genreService.createGenre(genreRequest);
 
-        // Status 201 (Created) + cabeçalho "Location" com a URI do novo recurso + DTO com links no corpo
-        return ResponseEntity
-                .created(URI.create("/api/v1/genres/" + genreResponse.id()))
-                .body(model);
+            // Envolve o DTO em um EntityModel e adiciona os links.
+            // methodOn(GenreController.class).getGenre(...) gera a URL real do endpoint de busca por ID.
+            EntityModel<GenreResponse> model = EntityModel.of(genreResponse,
+                    linkTo(methodOn(GenreController.class).getGenre(genreResponse.id())).withSelfRel(),
+                    linkTo(methodOn(GenreController.class).getAllGenres(null)).withRel("all-genres")
+            );
+
+            // Status 201 (Created) + cabeçalho "Location" com a URI do novo recurso + DTO com links no corpo
+            return ResponseEntity
+                    .created(URI.create("/api/genres/" + genreResponse.id()))
+                    .body(model);
+        });
     }
 
     /**
@@ -114,7 +128,7 @@ public class GenreController {
     /**
      * GET /genres: lista os gêneros de forma PAGINADA.
      * Pageable: o Spring monta esse objeto sozinho a partir dos parâmetros da URL.
-     * Exemplo: /api/v1/genres?page=0&size=5&sort=nome,asc (a primeira página é a 0).
+     * Exemplo: /api/genres?page=0&size=5&sort=nome,asc (a primeira página é a 0).
      * Sem parâmetros, usa o padrão do Spring: página 0 com 20 registros.
      * @ParameterObject: só faz o Swagger mostrar page, size e sort como campos separados.
      *

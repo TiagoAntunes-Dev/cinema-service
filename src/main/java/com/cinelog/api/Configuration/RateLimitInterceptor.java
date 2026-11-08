@@ -9,7 +9,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
- * RateLimitInterceptor: "porteiro" que roda ANTES de cada controller (rotas /api/v1/**, ver WebConfig).
+ * RateLimitInterceptor: "porteiro" que roda ANTES de cada controller (rotas /api/**, ver WebConfig).
+ * O limite vale a partir da versão 2 da API; na versão 1 não há limite (nenhum cabeçalho é enviado).
+ * O cliente é identificado pela chave de API (validada antes pelo ApiKeyInterceptor): cada chave tem o seu balde.
  *
  * A cada requisição ele tenta gastar 1 token do balde do cliente:
  * - Deu certo: informa o limite e quantos tokens restam nos cabeçalhos e deixa a requisição passar.
@@ -39,9 +41,16 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        // Cliente identificado pelo IP. Atrás de um proxy/load balancer o IP seria o do proxy;
-        // neste caso o certo seria configurar server.forward-headers-strategy (não é o caso local).
-        String clientKey = request.getRemoteAddr();
+        // Versão 1: sem rate limit.
+        if (!ApiVersionSupport.isSecuredVersion(request)) {
+            return true;
+        }
+
+        // Cliente identificado pela chave de API validada. Se por algum motivo não houver chave, cai para o IP.
+        // (Atrás de um proxy/load balancer o IP seria o do proxy; o certo seria configurar
+        // server.forward-headers-strategy, o que não é o caso local.)
+        Object apiKey = request.getAttribute(ApiKeyInterceptor.API_KEY_ATTRIBUTE);
+        String clientKey = (apiKey != null) ? "key:" + apiKey : "ip:" + request.getRemoteAddr();
 
         ConsumptionProbe probe = rateLimitService.tryConsume(clientKey);
 
