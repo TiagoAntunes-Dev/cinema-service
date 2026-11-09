@@ -20,7 +20,6 @@ public class SwaggerCssFilter extends OncePerRequestFilter {
 
         String uri = request.getRequestURI();
 
-        // Intercepta exclusivamente a página principal do Swagger UI
         if (uri != null && uri.contains("/swagger-ui/index.html")) {
             ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
             filterChain.doFilter(request, responseWrapper);
@@ -29,15 +28,62 @@ public class SwaggerCssFilter extends OncePerRequestFilter {
             if (content.length > 0) {
                 String html = new String(content, StandardCharsets.UTF_8);
 
-                // Injeta o link para o teu custom.css antes de fechar a tag </head>
+                // Injeção do CSS e do Botão/Script
                 if (html.contains("</head>") && !html.contains("custom.css")) {
-                    String cssLink = "<link rel=\"stylesheet\" type=\"text/css\" href=\"/custom.css\">";
+                    // Caminho relativo para o CSS, mais robusto em diferentes ambientes
+                    String cssLink = "<link rel=\"stylesheet\" type=\"text/css\" href=\"custom.css\">";
+
+                    // HTML do botão e o JavaScript para alternar o tema
+                    String themeToggleHtml = """
+                        <style>
+                            #theme-toggle-btn {
+                                position: fixed; bottom: 20px; right: 20px; z-index: 1000;
+                                padding: 12px 18px; border-radius: 50px;
+                                border: 1px solid #6366f1; background: #1e293b;
+                                color: #f3f4f6; cursor: pointer; font-size: 16px;
+                                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                                display: flex; align-items: center; gap: 8px;
+                                transition: all 0.2s ease;
+                            }
+                            #theme-toggle-btn:hover { transform: scale(1.05); background: #334155; }
+                        </style>
+                        <button id="theme-toggle-btn" onclick="toggleSwaggerTheme()">
+                            🌓 Alternar Tema
+                        </button>
+                        <script>
+                            (function() {
+                                const html = document.documentElement;
+                                // Verifica preferência salva
+                                const savedTheme = localStorage.getItem('swagger-theme');
+                                if (savedTheme === 'dark') {
+                                    html.classList.add('dark-mode');
+                                } else if (savedTheme === 'light') {
+                                    html.classList.remove('dark-mode');
+                                } else {
+                                    // Se não houver preferência, segue a do sistema
+                                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                                        html.classList.add('dark-mode');
+                                    }
+                                }
+                            })();
+
+                            function toggleSwaggerTheme() {
+                                const html = document.documentElement;
+                                const isNowDark = html.classList.toggle('dark-mode');
+                                localStorage.setItem('swagger-theme', isNowDark ? 'dark' : 'light');
+                            }
+                        </script>
+                    """;
+
+                    // Injeta o CSS no <head> e o botão/script no final do <body>
                     html = html.replace("</head>", cssLink + "</head>");
+                    html = html.replace("</body>", themeToggleHtml + "</body>");
                 }
 
                 response.setContentType("text/html;charset=UTF-8");
-                response.setContentLength(html.getBytes(StandardCharsets.UTF_8).length);
-                response.getOutputStream().write(html.getBytes(StandardCharsets.UTF_8));
+                byte[] htmlBytes = html.getBytes(StandardCharsets.UTF_8);
+                response.setContentLength(htmlBytes.length);
+                response.getOutputStream().write(htmlBytes);
                 responseWrapper.copyBodyToResponse();
                 return;
             }
