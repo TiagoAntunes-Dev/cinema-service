@@ -30,14 +30,15 @@ public class SwaggerCssFilter extends OncePerRequestFilter {
 
                 // Injeção do CSS e do Botão/Script
                 if (html.contains("</head>") && !html.contains("custom.css")) {
-                    // Caminho relativo para o CSS, mais robusto em diferentes ambientes
-                    String cssLink = "<link rel=\"stylesheet\" type=\"text/css\" href=\"custom.css\">";
+
+                    // Caminho ABSOLUTO para o CSS (essencial para não dar 404)
+                    String cssLink = "<link rel=\"stylesheet\" type=\"text/css\" href=\"/custom.css\">";
 
                     // HTML do botão e o JavaScript para alternar o tema
                     String themeToggleHtml = """
                         <style>
                             #theme-toggle-btn {
-                                position: fixed; bottom: 20px; right: 20px; z-index: 1000;
+                                position: fixed; bottom: 20px; right: 20px; z-index: 10000;
                                 padding: 12px 18px; border-radius: 50px;
                                 border: 1px solid #6366f1; background: #1e293b;
                                 color: #f3f4f6; cursor: pointer; font-size: 16px;
@@ -46,6 +47,7 @@ public class SwaggerCssFilter extends OncePerRequestFilter {
                                 transition: all 0.2s ease;
                             }
                             #theme-toggle-btn:hover { transform: scale(1.05); background: #334155; }
+                            html.dark-mode #theme-toggle-btn { background: #f8fafc; color: #1e293b; }
                         </style>
                         <button id="theme-toggle-btn" onclick="toggleSwaggerTheme()">
                             🌓 Alternar Tema
@@ -80,13 +82,16 @@ public class SwaggerCssFilter extends OncePerRequestFilter {
                     html = html.replace("</body>", themeToggleHtml + "</body>");
                 }
 
+                // Escreve a resposta final modificada
                 response.setContentType("text/html;charset=UTF-8");
                 byte[] htmlBytes = html.getBytes(StandardCharsets.UTF_8);
                 response.setContentLength(htmlBytes.length);
                 response.getOutputStream().write(htmlBytes);
-                responseWrapper.copyBodyToResponse();
+
+                // IMPORTANTE: Retorna aqui. Não use copyBodyToResponse() após escrever manualmente.
                 return;
             }
+            // Só copia o body se não houver conteúdo modificado (fallback)
             responseWrapper.copyBodyToResponse();
         } else {
             filterChain.doFilter(request, response);
