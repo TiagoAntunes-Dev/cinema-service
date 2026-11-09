@@ -510,3 +510,39 @@ html.dark-mode #theme-toggle-btn:hover {
     background: #334155;
     box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
 }
+
+/* ==========================================================================
+   🛠️ AJUSTES FINOS (SERVIDOR, CADEADOS E BOTÃO AUTHORIZE)
+   ========================================================================== */
+
+/* 1. Deixar o texto da URL do servidor com fundo branco */
+.swagger-ui .servers > label > select,
+.swagger-ui .scheme-container {
+    background-color: #ffffff !important;
+    color: #1e293b !important; /* Texto escuro */
+    border: 1px solid #cbd5e1 !important;
+    font-weight: 600 !important;
+}
+
+/* 2. O botão "Authorize" geral (topo da página) */
+.swagger-ui .btn.authorize {
+    background-color: transparent !important; /* Remove o fundo branco */
+    color: #10b981 !important; /* Texto verde */
+    border-color: #10b981 !important; /* Borda verde */
+}
+
+/* O cadeado dentro do botão Authorize */
+.swagger-ui .btn.authorize svg {
+    fill: #10b981 !important;
+}
+
+/* 3. Os cadeados das rotas (que estavam invisíveis) */
+.swagger-ui .authorization__btn {
+    opacity: 1 !important; /* Garante que ele não está transparente */
+}
+
+/* Força o cadeado das rotas a ficar verde e visível */
+.swagger-ui .authorization__btn svg {
+    fill: #10b981 !important;
+    stroke: #10b981 !important;
+}
