@@ -1,9 +1,13 @@
 package com.cinelog.api.Configuration;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.ApiVersionConfigurer;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.List;
 
 /**
  * WebConfig: configurações do Spring MVC da API (versionamento e interceptors).
@@ -74,5 +78,12 @@ public class WebConfig implements WebMvcConfigurer {
         configurer.useRequestHeader(API_VERSION_HEADER)   // lê a versão do cabeçalho X-API-Version
                 .setDefaultVersion(DEFAULT_API_VERSION)   // sem o cabeçalho, usa a versão 1
                 .addSupportedVersions(SUPPORTED_API_VERSIONS); // só aceita as versões listadas
+    }
+
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+        PageableHandlerMethodArgumentResolver resolver = new PageableHandlerMethodArgumentResolver();
+        resolver.setMaxPageSize(100); // Define o limite máximo de itens por página (ex: 100)
+        resolvers.add(resolver);
     }
 }
