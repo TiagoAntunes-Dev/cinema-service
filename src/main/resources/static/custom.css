@@ -1,10 +1,10 @@
 /* ==========================================================================
-   CINELOG API - TEMA CINEMATOGRÁFICO
+   CINELOG API - TEMA CINEMATOGRÁFICO (BLINDADO)
    Light Mode = padrão | Dark Mode = classe .dark-mode no <html>
    ========================================================================== */
 
 /* ==========================================================================
-   🌞 LIGHT MODE (PADRÃO) - Mantido o seu original
+   🌞 LIGHT MODE (PADRÃO)
    ========================================================================== */
 
 body, .swagger-ui {
@@ -327,23 +327,6 @@ html.dark-mode .swagger-ui .btn.try-out__btn:hover {
     color: #ffffff !important;
 }
 
-html.dark-mode .swagger-ui input[type=text],
-html.dark-mode .swagger-ui textarea,
-html.dark-mode .swagger-ui select {
-    background-color: #020617 !important;
-    border: 1px solid #334155 !important;
-    color: #f8fafc !important;
-    border-radius: 10px !important;
-    padding: 10px 14px !important;
-}
-
-html.dark-mode .swagger-ui input[type=text]:focus,
-html.dark-mode .swagger-ui textarea:focus {
-    border-color: #6366f1 !important;
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
-}
-
 html.dark-mode .swagger-ui .microlight,
 html.dark-mode .swagger-ui .highlight-code {
     background-color: #020617 !important;
@@ -509,33 +492,28 @@ html.dark-mode #theme-toggle-btn:hover {
    🛠️ AJUSTES FINOS (SERVIDOR, CADEADOS E BOTÃO AUTHORIZE)
    ========================================================================== */
 
-/* 1. Deixar o texto da URL do servidor com fundo branco */
 .swagger-ui .servers > label > select,
 .swagger-ui .scheme-container {
     background-color: #ffffff !important;
-    color: #1e293b !important; /* Texto escuro */
+    color: #1e293b !important;
     border: 1px solid #cbd5e1 !important;
     font-weight: 600 !important;
 }
 
-/* 2. O botão "Authorize" geral (topo da página) */
 .swagger-ui .btn.authorize {
-    background-color: transparent !important; /* Remove o fundo branco */
-    color: #10b981 !important; /* Texto verde */
-    border-color: #10b981 !important; /* Borda verde */
+    background-color: transparent !important;
+    color: #10b981 !important;
+    border-color: #10b981 !important;
 }
 
-/* O cadeado dentro do botão Authorize */
 .swagger-ui .btn.authorize svg {
     fill: #10b981 !important;
 }
 
-/* 3. Os cadeados das rotas (que estavam invisíveis) */
 .swagger-ui .authorization__btn {
-    opacity: 1 !important; /* Garante que ele não está transparente */
+    opacity: 1 !important;
 }
 
-/* Força o cadeado das rotas a ficar verde e visível */
 .swagger-ui .authorization__btn svg {
     fill: #10b981 !important;
     stroke: #10b981 !important;
@@ -548,10 +526,8 @@ html.dark-mode #theme-toggle-btn:hover {
 /* 1. Conserta a caixinha de seleção (Media type) */
 html.dark-mode .swagger-ui select {
     background-color: #1e293b !important;
-    color: #f8fafc !important; /* Força o texto a ser branco */
+    color: #f8fafc !important;
     border: 1px solid #475569 !important;
-
-    /* Substitui a setinha preta invisível por uma setinha branca desenhada em SVG */
     appearance: none !important;
     background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23f8fafc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
@@ -566,36 +542,68 @@ html.dark-mode .swagger-ui select option {
     color: #f8fafc !important;
 }
 
-/* 3. Deixa o texto verde "Controls Accept header" mais brilhante para ler no escuro */
+/* 3. Texto verde "Controls Accept header" */
 html.dark-mode .swagger-ui .response-control-media-type__accept-message {
-    color: #34d399 !important; /* Um verde mais claro */
+    color: #34d399 !important;
 }
 
-/* 4. Ajusta o texto "Response headers" e a caixa de código abaixo dele */
-html.dark-mode .swagger-ui .response-col_headers {
-    color: #cbd5e1 !important;
-}
-
-/* 5. Caixa de código dos headers (aquele quadrado grande com JSON) */
+/* 4. Caixa de código dos headers */
 html.dark-mode .swagger-ui .response-col_headers pre {
     background-color: #020617 !important;
     border: 1px solid #1e293b !important;
-    color: #93c5fd !important; /* Azulzinho claro para o texto */
+    color: #93c5fd !important;
 }
 
-/* 6. CORREÇÃO DA TABELA DE RESPOSTAS (Onde o texto estava invisível) */
+/* 5. CORREÇÃO DA TABELA DE RESPOSTAS (Onde o texto estava invisível) */
 html.dark-mode .swagger-ui table thead tr th {
-    color: #94a3b8 !important; /* Cor do cabeçalho "Code / Description" */
+    color: #94a3b8 !important;
     border-bottom: 1px solid #334155 !important;
 }
 
 html.dark-mode .swagger-ui table.responses-table tbody tr td {
-    color: #f8fafc !important; /* Força o texto da resposta a ser branco */
+    color: #f8fafc !important;
     border-bottom: 1px solid #1e293b !important;
 }
 
 html.dark-mode .swagger-ui table.responses-table td.response-col_status {
-    color: #38bdf8 !important; /* Status (200) em azul claro para ler no escuro */
+    color: #38bdf8 !important;
     font-weight: 700 !important;
     font-family: monospace !important;
+}
+
+/* 6. CORREÇÃO DOS MODAIS (Authorize, etc) - Evita fundo branco no escuro */
+html.dark-mode .swagger-ui .dialog-ux .modal-ux {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7) !important;
+}
+
+html.dark-mode .swagger-ui .dialog-ux .modal-ux-header h3 {
+    color: #f8fafc !important;
+}
+
+html.dark-mode .swagger-ui .dialog-ux .modal-ux-content p {
+    color: #cbd5e1 !important;
+}
+
+html.dark-mode .swagger-ui .dialog-ux .modal-ux-content label {
+    color: #f8fafc !important;
+}
+
+html.dark-mode .swagger-ui .dialog-ux .modal-ux-content input {
+    background-color: #020617 !important;
+    color: #f8fafc !important;
+    border: 1px solid #334155 !important;
+}
+
+/* 7. CORREÇÃO DOS SCHEMAS (Caixas de DTOs) */
+html.dark-mode .swagger-ui .model-toggle {
+    color: #cbd5e1 !important;
+}
+html.dark-mode .swagger-ui .property-row {
+    color: #f8fafc !important;
+    border-bottom: 1px solid #334155 !important;
+}
+html.dark-mode .swagger-ui .property-row .property-type {
+    color: #93c5fd !important;
 }
