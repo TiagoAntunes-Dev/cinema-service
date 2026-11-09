@@ -2,27 +2,30 @@
    CINELOG API - ULTIMATE CINEMATIC THEME (IMAX / LETTERBOXD VIBE)
    ========================================================================== */
 
-//* Título principal com cor branca impecável e lâmpada automática ao lado */
- .swagger-ui .info h2.title,
- .swagger-ui .info .title {
-     color: #ffffff !important;
-     font-size: 2.5rem !important;
-     font-weight: 900 !important;
-     letter-spacing: -1px;
-     text-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
-     display: inline-flex !important;
-     align-items: center !important;
-     gap: 12px !important;
- }
+/* Fundo profundo com vinheta cinematográfica */
+body, .swagger-ui {
+    background-color: #030712 !important;
+    background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #030712 70%) !important;
+    color: #f3f4f6 !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
 
- /* Insere a lâmpada de forma automática e perfeitamente alinhada */
- .swagger-ui .info h2.title::after,
- .swagger-ui .info .title::after {
-     content: "💡" !important;
-     font-size: 2.2rem !important;
-     display: inline-block !important;
-     vertical-align: middle !important;
- }
+/* Barra de topo estilo App Bar de Streaming */
+.swagger-ui .topbar {
+    background: rgba(3, 7, 18, 0.85) !important;
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(99, 102, 241, 0.3);
+    padding: 15px 0;
+}
+
+/* Ocultar elementos desnecessários e dar destaque ao título */
+.swagger-ui .info .title {
+    color: #ffffff !important;
+    font-size: 2.5rem !important;
+    font-weight: 900 !important;
+    letter-spacing: -1px;
+    text-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+}
 
 .swagger-ui .info .description {
     background: rgba(15, 23, 42, 0.6);
