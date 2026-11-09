@@ -2,6 +2,9 @@
 FROM eclipse-temurin:17-jdk AS build
 WORKDIR /app
 
+# Limita o consumo de memória do Maven para caber nos 512MB do Render
+ENV MAVEN_OPTS="-Xmx256m"
+
 # Copia os ficheiros de configuração do Maven e o código fonte
 COPY . .
 
