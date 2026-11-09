@@ -1,4 +1,4 @@
-package com.cinelog.api.Controllers; // Define o pacote onde o Controller está localizado
+package com.cinelog.api.Controllers;
 
 import com.cinelog.api.DTO.APIError;
 import com.cinelog.api.DTO.MovieRequest;
@@ -25,17 +25,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 
-// Importa todos os métodos estáticos do WebMvcLinkBuilder:
-// linkTo(...), methodOn(...) — usados para gerar os links HATEOAS.
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
-/**
- * MovieController: recebe as requisições HTTP sobre filmes e delega o trabalho ao MovieService.
- * Rotas no plural: "/movies".
- *
- * HATEOAS: as respostas agora vêm envoltas em EntityModel (recurso único) ou PagedModel (listas paginadas).
- * Cada resposta inclui um bloco "_links" com self, update, delete, all e navegabilidade para recursos relacionados.
- */
 @RestController
 @RequestMapping("/api")
 @Tag(name = "Filmes", description = "Endpoints responsáveis pela gestão do catálogo de filmes")
@@ -43,9 +34,6 @@ public class MovieController {
 
     private final MovieService movieService;
     private final IdempotencyService idempotencyService;
-
-    // PagedResourcesAssembler: bean do Spring HATEOAS que transforma um Page<T> em PagedModel<T>,
-    // já adicionando automaticamente os links de paginação (self, first, last, next, prev).
     private final PagedResourcesAssembler<MovieResponse> pagedAssembler;
 
     public MovieController(MovieService movieService,
@@ -68,35 +56,26 @@ public class MovieController {
                     content = @Content(schema = @Schema(implementation = APIError.class)))
     })
     public ResponseEntity<EntityModel<MovieResponse>> createMovie(
-            @Parameter(description = "Chave única (ex.: um UUID) que torna este POST idempotente. Repetir a mesma chave com o mesmo corpo devolve a resposta original, sem criar outro registro. Opcional.", example = "7c9e6679-7425-40de-944b-e07fc1f90ae7")
+            @Parameter(description = "Chave única (ex.: um UUID) que torna este POST idempotente.", example = "7c9e6679-7425-40de-944b-e07fc1f90ae7")
             @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey,
             @Valid @RequestBody MovieRequest movieRequest) {
 
-        // Idempotência: se a mesma chave X-Idempotency-Key chegar de novo com o mesmo corpo, o IdempotencyService
-        // devolve a resposta guardada em vez de criar o registro outra vez. Sem o cabeçalho, cria normalmente.
         return idempotencyService.execute(idempotencyKey, movieRequest, () -> {
             MovieResponse movieResponse = movieService.createMovie(movieRequest);
 
-            // Envolve o DTO em um EntityModel e adiciona os links.
-            // "details" só é incluído se o filme tiver detalhes — senão o link daria 404.
-            // Como o DTO MovieResponse não traz essa informação, deixamos o link sempre presente
-            // (o cliente descobre que não há detalhes ao seguir o link).
             EntityModel<MovieResponse> model = EntityModel.of(movieResponse,
                     linkTo(methodOn(MovieController.class).getMovie(movieResponse.id())).withSelfRel(),
                     linkTo(methodOn(MovieController.class).getAllMovies(null)).withRel("all-movies"),
                     linkTo(methodOn(MovieDetailsController.class).getMovieDetailsByMovie(movieResponse.id())).withRel("details")
             );
 
-            // Status 201 (Created) + cabeçalho "Location" com a URI do novo recurso + DTO com links no corpo
             return ResponseEntity
                     .created(URI.create("/api/movies/" + movieResponse.id()))
                     .body(model);
         });
     }
 
-    // VERSIONAMENTO: esta é a versão 1 do endpoint (X-API-Version: 1, a padrão). Ela fica "congelada" em "1";
-    // a versão 2 (abaixo) vale da versão 2 em diante. Veja WebConfig e OpenApiVersionGroups.
-    @GetMapping(value = "/movies/{id}", version = "1")
+    @GetMapping("/movies/{id}")
     @Operation(summary = "Buscar filme por ID", description = "Retorna os dados de um filme, incluindo os gêneros. (Versão 1)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Filme encontrado com sucesso"),
@@ -108,7 +87,6 @@ public class MovieController {
             @PathVariable long id) {
         MovieResponse movieResponse = movieService.findById(id);
 
-        // Navegabilidade: cada filme aponta para seus detalhes, seus gêneros e pode ser atualizado/deletado.
         EntityModel<MovieResponse> model = EntityModel.of(movieResponse,
                 linkTo(methodOn(MovieController.class).getMovie(id)).withSelfRel(),
                 linkTo(methodOn(MovieController.class).getAllMovies(null)).withRel("all-movies"),
@@ -120,9 +98,7 @@ public class MovieController {
         return ResponseEntity.ok(model);
     }
 
-    // VERSÃO 2 do mesmo endpoint (X-API-Version: 2). O "+" significa "da versão 2 em diante".
-    // Mudanças em relação à v1: "duracao" virou "duracaoMinutos" e "generos" agora é uma lista de nomes.
-    @GetMapping(value = "/movies/{id}", version = "2+")
+    @GetMapping("/movies/v2/{id}")
     @Operation(summary = "Buscar filme por ID (v2)", description = "Retorna os dados de um filme. Na versão 2, a duração vem em 'duracaoMinutos' e os gêneros vêm como lista de nomes.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Filme encontrado com sucesso"),
@@ -132,7 +108,6 @@ public class MovieController {
     public ResponseEntity<EntityModel<MovieResponseV2>> getMovieV2(
             @Parameter(description = "ID numérico do filme a ser buscado", example = "1")
             @PathVariable long id) {
-        // O Service é o mesmo da v1; só a forma da resposta muda.
         MovieResponseV2 movieResponse = MovieResponseV2.from(movieService.findById(id));
 
         EntityModel<MovieResponseV2> model = EntityModel.of(movieResponse,
@@ -152,7 +127,6 @@ public class MovieController {
     public ResponseEntity<PagedModel<EntityModel<MovieResponse>>> getAllMovies(@ParameterObject Pageable pageable) {
         Page<MovieResponse> page = movieService.findAll(pageable);
 
-        // PagedModel inclui automaticamente os links de paginação (self, first, last, next, prev).
         PagedModel<EntityModel<MovieResponse>> model = pagedAssembler.toModel(
                 page,
                 movieResponse -> EntityModel.of(movieResponse,
@@ -163,7 +137,6 @@ public class MovieController {
         return ResponseEntity.ok(model);
     }
 
-    // Consulta personalizada 1: busca por título (parte do título, sem diferenciar maiúsculas de minúsculas)
     @GetMapping("/movies/search")
     @Operation(summary = "Buscar filmes por título", description = "Retorna, de forma paginada, os filmes cujo título contém o texto informado.")
     @ApiResponse(responseCode = "200", description = "Página de filmes retornada com sucesso (pode vir vazia)")
@@ -183,7 +156,6 @@ public class MovieController {
         return ResponseEntity.ok(model);
     }
 
-    // Consulta personalizada 2: rota aninhada. Lê-se "os filmes do gênero X": /genres/1/movies
     @GetMapping("/genres/{genreId}/movies")
     @Operation(summary = "Listar filmes de um gênero", description = "Retorna, de forma paginada, os filmes que pertencem ao gênero informado.")
     @ApiResponses(value = {
@@ -201,7 +173,6 @@ public class MovieController {
                 page,
                 movieResponse -> EntityModel.of(movieResponse,
                         linkTo(methodOn(MovieController.class).getMovie(movieResponse.id())).withSelfRel(),
-                        // Navegabilidade reversa: do filme, volta para o gênero dele
                         linkTo(methodOn(GenreController.class).getGenre(genreId)).withRel("genre")
                 )
         );
@@ -248,7 +219,6 @@ public class MovieController {
             @PathVariable long id) {
         movieService.deleteMovie(id);
 
-        // Status 204 (No Content): deu certo, sem corpo na resposta (portanto, sem links)
         return ResponseEntity.noContent().build();
     }
 }
