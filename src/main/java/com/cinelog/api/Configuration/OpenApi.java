@@ -44,7 +44,9 @@ public class OpenApi {
     );
 
     @Bean
-    public OpenAPI customOpenAPI(@Value("${springdoc.version:1.0.0}") String appVersion) {
+    public OpenAPI customOpenAPI(
+            @Value("${springdoc.version:1.0.0}") String appVersion,
+            @Value("${springdoc.server.url:http://localhost:8080}") String serverUrl) {
         return new OpenAPI()
                 .info(new Info()
                         .title("🎬 Cinelog API — Catalogação de Filmes e Watchlists")
@@ -296,8 +298,14 @@ public class OpenApi {
                         .url("https://github.com/TiagoAntunes-Dev/cinema-service"))
                 .servers(List.of(
                         new Server()
+                                .url(serverUrl)
+                                .description(serverUrl.contains("onrender.com") ? "🚀 Servidor de Produção (Render)" : "💻 Servidor Local"),
+                        new Server()
+                                .url("https://cinema-service-sv1b.onrender.com")
+                                .description("🌐 Produção (Render)"),
+                        new Server()
                                 .url("http://localhost:8080")
-                                .description("💻 Servidor de desenvolvimento local")
+                                .description("💻 Desenvolvimento Local")
                 ))
                 .tags(List.of(
                         new Tag().name("Usuários")
