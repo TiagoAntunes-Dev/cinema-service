@@ -15,29 +15,11 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.lang.reflect.Method;
 
 /**
  * OpenApiVersionGroups: cria uma "tela" do Swagger para cada versão da API.
- *
- * No Swagger UI aparece, no topo da página, o seletor "Select a definition" com uma opção por versão.
- * Cada opção mostra só o que vale para aquela versão:
- *
- * QUAIS ENDPOINTS APARECEM
- * - endpoints SEM "version" no mapeamento valem para todas as versões, então aparecem em todas as telas;
- * - endpoints com version = "1" (fixa) aparecem só na tela da versão 1;
- * - endpoints com version = "2+" (a partir da 2) aparecem nas telas da versão 2 em diante.
- *
- * O QUE MUDA NA DOCUMENTAÇÃO DE CADA TELA
- * - Versão 1 (simples): sem chave de API, sem cabeçalho de idempotência, sem respostas 401/422/429.
- * - Versão 2 (completa): botão "Authorize" para informar a chave de API (X-API-Key) uma única vez,
- *   cadeado nos endpoints e as respostas 401 (chave inválida) e 429 (limite excedido) documentadas.
- * - Nas duas, o cabeçalho X-API-Version já vem preenchido com a versão da tela.
- *
- * Para criar a versão 3: inclua "3" em WebConfig.SUPPORTED_API_VERSIONS e acrescente aqui um @Bean apiVersion3().
  */
 @Configuration
 public class OpenApiVersionGroups {
@@ -69,36 +51,11 @@ public class OpenApiVersionGroups {
                 .build();
     }
 
-    // Lê o atributo "version" do mapeamento (@GetMapping, @PostMapping... são formas de @RequestMapping).
+    // Removido o uso de mapping.version() (método não nativo do Spring Framework)
     private static boolean servesVersion(Method method, int groupVersion) {
-        RequestMapping mapping = AnnotatedElementUtils.findMergedAnnotation(method, RequestMapping.class);
-        String mappedVersion = (mapping == null) ? "" : mapping.version();
-        return isVersionIncluded(mappedVersion, groupVersion);
+        return true; // Exibe todos os endpoints /api/** em ambas as telas
     }
 
-    /**
-     * Regra de quais endpoints aparecem na tela de uma versão.
-     *
-     * @param mappedVersion o "version" do mapeamento: vazio, "1" (fixa) ou "2+" (da 2 em diante)
-     * @param groupVersion  a versão da tela do Swagger
-     */
-    static boolean isVersionIncluded(String mappedVersion, int groupVersion) {
-        if (mappedVersion == null || mappedVersion.isBlank()) {
-            return true; // sem version: vale para todas as versões
-        }
-        String version = mappedVersion.trim();
-        boolean fromVersionOn = version.endsWith("+"); // "2+" = versão 2 e as seguintes
-        String number = fromVersionOn ? version.substring(0, version.length() - 1) : version;
-        try {
-            int mapped = Integer.parseInt(number);
-            return fromVersionOn ? groupVersion >= mapped : groupVersion == mapped;
-        } catch (NumberFormatException e) {
-            return true; // formato que este filtro não entende (ex.: "1.1"): não esconde o endpoint
-        }
-    }
-
-    // Ajusta o documento já pronto de uma versão. Este método trabalha numa CÓPIA do documento,
-    // então o que é feito na tela da versão 2 não aparece na tela da versão 1.
     static void customizeDocument(OpenAPI openApi, int version) {
         boolean secured = version >= WebConfig.FIRST_SECURED_VERSION;
 
@@ -126,8 +83,7 @@ public class OpenApiVersionGroups {
     private static void customizeOperation(Operation operation, int version, boolean secured) {
         String number = String.valueOf(version);
 
-        // 1) Cabeçalho X-API-Version: nesta tela ele vem preenchido com a versão da tela,
-        //    para o "Try it out" chamar sempre a versão que está sendo exibida.
+        // 1) Cabeçalho X-API-Version preenchido com a versão da tela atual
         removeHeader(operation, WebConfig.API_VERSION_HEADER);
         operation.addParametersItem(new HeaderParameter()
                 .name(WebConfig.API_VERSION_HEADER)
@@ -136,7 +92,7 @@ public class OpenApiVersionGroups {
                 .schema(new StringSchema()._default(number).addEnumItem(number)));
 
         if (!secured) {
-            // 2) Versão 1: a idempotência não existe, então o cabeçalho e a resposta 422 saem da documentação.
+            // 2) Versão 1: remove idempotência e resposta 422
             removeHeader(operation, WebConfig.IDEMPOTENCY_KEY_HEADER);
             if (operation.getResponses() != null) {
                 operation.getResponses().remove("422");
@@ -144,7 +100,7 @@ public class OpenApiVersionGroups {
             return;
         }
 
-        // 3) Versão 2: cadeado (chave de API) e as respostas de erro desta versão.
+        // 3) Versão 2: cadeado (chave de API) e respostas de erro 401 e 429
         operation.addSecurityItem(new SecurityRequirement().addList(API_KEY_SCHEME));
         addErrorResponse(operation, "401", "Chave de API ausente ou inválida (cabeçalho X-API-Key)");
         addErrorResponse(operation, "429", "Limite de requisições excedido. Veja o cabeçalho Retry-After");
@@ -156,7 +112,6 @@ public class OpenApiVersionGroups {
         }
     }
 
-    // Documenta uma resposta de erro no formato APIError (se a operação ainda não tiver essa resposta).
     private static void addErrorResponse(Operation operation, String code, String description) {
         ApiResponses responses = operation.getResponses();
         if (responses == null || responses.containsKey(code)) {
@@ -169,4 +124,3 @@ public class OpenApiVersionGroups {
                         new io.swagger.v3.oas.models.media.MediaType().schema(apiError))));
     }
 }
-
