@@ -67,6 +67,8 @@ public class OpenApiVersionGroups {
             }
         }
 
+        customizeMovieById(openApi, secured);
+
         if (secured) {
             if (openApi.getComponents() == null) {
                 openApi.setComponents(new Components());
@@ -77,6 +79,28 @@ public class OpenApiVersionGroups {
                     .name(WebConfig.API_KEY_HEADER)
                     .description("Chave de API, obrigatória na versão 2. Clique em Authorize e informe uma das chaves "
                             + "configuradas em api-key.valid-keys (application.properties)."));
+        }
+    }
+
+    // GET /api/movies/{id} devolve MovieResponse (v1) ou MovieResponseV2 (v2): cada tela mostra só o formato da sua versão.
+    private static void customizeMovieById(OpenAPI openApi, boolean secured) {
+        if (openApi.getPaths() == null) {
+            return;
+        }
+        PathItem item = openApi.getPaths().get("/api/movies/{id}");
+        if (item == null || item.getGet() == null || item.getGet().getResponses() == null) {
+            return;
+        }
+        ApiResponse ok = item.getGet().getResponses().get("200");
+        if (ok != null && ok.getContent() != null) {
+            String schemaName = secured ? "MovieResponseV2" : "MovieResponse";
+            for (io.swagger.v3.oas.models.media.MediaType mediaType : ok.getContent().values()) {
+                mediaType.setSchema(new Schema<>().$ref("#/components/schemas/" + schemaName));
+            }
+        }
+        // Na tela da versão 1, o formato da versão 2 não é usado: tira da seção Schemas.
+        if (!secured && openApi.getComponents() != null && openApi.getComponents().getSchemas() != null) {
+            openApi.getComponents().getSchemas().remove("MovieResponseV2");
         }
     }
 

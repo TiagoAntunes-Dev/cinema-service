@@ -1,5 +1,6 @@
 package com.cinelog.api.Controllers;
 
+import com.cinelog.api.Configuration.ApiVersionSupport;
 import com.cinelog.api.DTO.APIError;
 import com.cinelog.api.DTO.MovieRequest;
 import com.cinelog.api.DTO.MovieResponse;
@@ -22,6 +23,8 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.net.URI;
 
@@ -75,43 +78,37 @@ public class MovieController {
         });
     }
 
+    // Descobre se a requisição atual pediu a versão 2 (cabeçalho X-API-Version).
+    // Lemos o cabeçalho por aqui para manter a assinatura getMovie(long id), usada nos links HATEOAS de outros controllers.
+    private static boolean isVersion2() {
+        if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attributes) {
+            return ApiVersionSupport.isSecuredVersion(attributes.getRequest());
+        }
+        return false;
+    }
+
     @GetMapping("/movies/{id}")
-    @Operation(summary = "Buscar filme por ID", description = "Retorna os dados de um filme, incluindo os gêneros. (Versão 1)")
+    @Operation(summary = "Buscar filme por ID",
+            description = "Retorna os dados de um filme, incluindo os gêneros. O formato depende da versão da API "
+                    + "(cabeçalho X-API-Version): na versão 1 a duração vem em 'duracao'; na versão 2 vem em 'duracaoMinutos'. "
+                    + "Nas duas versões os gêneros vêm como objetos (id e nome).")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Filme encontrado com sucesso"),
+            @ApiResponse(responseCode = "200", description = "Filme encontrado com sucesso",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(oneOf = {MovieResponse.class, MovieResponseV2.class}))),
             @ApiResponse(responseCode = "404", description = "Filme não encontrado para o ID especificado",
                     content = @Content(schema = @Schema(implementation = APIError.class)))
     })
-    public ResponseEntity<EntityModel<MovieResponse>> getMovie(
+    public ResponseEntity<EntityModel<Object>> getMovie(
             @Parameter(description = "ID numérico do filme a ser buscado", example = "1")
             @PathVariable long id) {
         MovieResponse movieResponse = movieService.findById(id);
 
-        EntityModel<MovieResponse> model = EntityModel.of(movieResponse,
+        // Versão 2: duracaoMinutos. Versão 1 (padrão): duracao.
+        Object body = isVersion2() ? MovieResponseV2.from(movieResponse) : movieResponse;
+
+        EntityModel<Object> model = EntityModel.of(body,
                 linkTo(methodOn(MovieController.class).getMovie(id)).withSelfRel(),
-                linkTo(methodOn(MovieController.class).getAllMovies(null)).withRel("all-movies"),
-                linkTo(methodOn(MovieController.class).updateMovie(id, null)).withRel("update"),
-                linkTo(methodOn(MovieController.class).deleteMovie(id)).withRel("delete"),
-                linkTo(methodOn(MovieDetailsController.class).getMovieDetailsByMovie(id)).withRel("details")
-        );
-
-        return ResponseEntity.ok(model);
-    }
-
-    @GetMapping("/movies/v2/{id}")
-    @Operation(summary = "Buscar filme por ID (v2)", description = "Retorna os dados de um filme. Na versão 2, a duração vem em 'duracaoMinutos' e os gêneros vêm como lista de nomes.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Filme encontrado com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Filme não encontrado para o ID especificado",
-                    content = @Content(schema = @Schema(implementation = APIError.class)))
-    })
-    public ResponseEntity<EntityModel<MovieResponseV2>> getMovieV2(
-            @Parameter(description = "ID numérico do filme a ser buscado", example = "1")
-            @PathVariable long id) {
-        MovieResponseV2 movieResponse = MovieResponseV2.from(movieService.findById(id));
-
-        EntityModel<MovieResponseV2> model = EntityModel.of(movieResponse,
-                linkTo(methodOn(MovieController.class).getMovieV2(id)).withSelfRel(),
                 linkTo(methodOn(MovieController.class).getAllMovies(null)).withRel("all-movies"),
                 linkTo(methodOn(MovieController.class).updateMovie(id, null)).withRel("update"),
                 linkTo(methodOn(MovieController.class).deleteMovie(id)).withRel("delete"),
