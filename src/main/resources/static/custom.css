@@ -1,10 +1,10 @@
 /* ==========================================================================
-   CINELOG API - TEMA CINEMATOGRÁFICO (BLINDADO)
-   Light Mode = padrão | Dark Mode = classe .dark-mode no <html>
+   CINELOG API - TEMA CINEMATOGRÁFICO (CONSOLIDADO E BLINDADO)
+   Light Mode = Padrão | Dark Mode = Ativado por .dark-mode no <html>
    ========================================================================== */
 
 /* ==========================================================================
-   🌞 LIGHT MODE (PADRÃO)
+   1. 🌞 LIGHT MODE (PADRÃO)
    ========================================================================== */
 
 body, .swagger-ui {
@@ -208,7 +208,7 @@ body, .swagger-ui {
 }
 
 /* ==========================================================================
-   🌙 DARK MODE (ativado por .dark-mode no <html>)
+   2. 🌙 DARK MODE (ATIVADO POR .dark-mode NO <html>)
    ========================================================================== */
 
 html.dark-mode body, html.dark-mode .swagger-ui {
@@ -371,12 +371,6 @@ html.dark-mode .swagger-ui .model {
     font-family: 'Fira Code', monospace !important;
 }
 
-html.dark-mode .swagger-ui .opblock .opblock-summary-description {
-    color: #94a3b8 !important;
-    font-size: 14px !important;
-    font-style: italic !important;
-}
-
 html.dark-mode .swagger-ui .opblock-tag {
     color: #f8fafc !important;
     border-bottom: 2px solid rgba(99, 102, 241, 0.4) !important;
@@ -391,7 +385,7 @@ html.dark-mode .swagger-ui .opblock-tag small {
 }
 
 /* ==========================================================================
-   🎬 ROLO DE FILME — EXCLUSIVO DO DARK MODE
+   3. 🎬 ROLO DE FILME (EXCLUSIVO DO DARK MODE)
    ========================================================================== */
 
 html.dark-mode body::before {
@@ -447,7 +441,7 @@ html.dark-mode body::after {
 }
 
 /* ==========================================================================
-   🔘 BOTÃO DE ALTERNÂNCIA (opcional, se injetado com id="theme-toggle-btn")
+   4. 🔘 BOTÃO DE ALTERNÂNCIA (TOGGLE)
    ========================================================================== */
 
 #theme-toggle-btn {
@@ -489,9 +483,10 @@ html.dark-mode #theme-toggle-btn:hover {
 }
 
 /* ==========================================================================
-   🛠️ AJUSTES FINOS (SERVIDOR, CADEADOS E BOTÃO AUTHORIZE)
+   5. 🛠️ AJUSTES GLOBAIS (SERVIDOR, CADEADOS E AUTHORIZE)
    ========================================================================== */
 
+/* URL do Servidor (Fundo branco para ficar legível nos dois modos) */
 .swagger-ui .servers > label > select,
 .swagger-ui .scheme-container {
     background-color: #ffffff !important;
@@ -500,30 +495,28 @@ html.dark-mode #theme-toggle-btn:hover {
     font-weight: 600 !important;
 }
 
+/* Botão Authorize e Cadeados */
 .swagger-ui .btn.authorize {
     background-color: transparent !important;
     color: #10b981 !important;
     border-color: #10b981 !important;
 }
 
-.swagger-ui .btn.authorize svg {
+.swagger-ui .btn.authorize svg,
+.swagger-ui .authorization__btn svg {
     fill: #10b981 !important;
+    stroke: #10b981 !important;
 }
 
 .swagger-ui .authorization__btn {
     opacity: 1 !important;
 }
 
-.swagger-ui .authorization__btn svg {
-    fill: #10b981 !important;
-    stroke: #10b981 !important;
-}
-
 /* ==========================================================================
-   🛠️ CORREÇÃO DOS DROPDOWNS, TABELAS E TEXTOS NO DARK MODE
+   6. 🛠️ CORREÇÕES NO DARK MODE (CONTRASTE E VISIBILIDADE)
    ========================================================================== */
 
-/* 1. Conserta a caixinha de seleção (Media type) */
+/* Dropdowns (Media type) */
 html.dark-mode .swagger-ui select {
     background-color: #1e293b !important;
     color: #f8fafc !important;
@@ -536,149 +529,83 @@ html.dark-mode .swagger-ui select {
     padding-right: 30px !important;
 }
 
-/* 2. Conserta a lista que abre quando clica na caixinha */
 html.dark-mode .swagger-ui select option {
     background-color: #1e293b !important;
     color: #f8fafc !important;
 }
 
-/* 3. Texto verde "Controls Accept header" */
-html.dark-mode .swagger-ui .response-control-media-type__accept-message {
-    color: #34d399 !important;
-}
-
-/* 4. Caixa de código dos headers */
-html.dark-mode .swagger-ui .response-col_headers pre {
-    background-color: #020617 !important;
-    border: 1px solid #1e293b !important;
-    color: #93c5fd !important;
-}
-
-/* 5. CORREÇÃO DA TABELA DE RESPOSTAS (Onde o texto estava invisível) */
-html.dark-mode .swagger-ui table thead tr th {
-    color: #94a3b8 !important;
-    border-bottom: 1px solid #334155 !important;
-}
-
-html.dark-mode .swagger-ui table.responses-table tbody tr td {
-    color: #f8fafc !important;
-    border-bottom: 1px solid #1e293b !important;
-}
-
-html.dark-mode .swagger-ui table.responses-table td.response-col_status {
-    color: #38bdf8 !important;
-    font-weight: 700 !important;
-    font-family: monospace !important;
-}
-
-/* 6. CORREÇÃO DOS MODAIS (Authorize, etc) - Evita fundo branco no escuro */
+/* Modais (Authorize) */
 html.dark-mode .swagger-ui .dialog-ux .modal-ux {
     background: #0f172a !important;
     border: 1px solid #334155 !important;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7) !important;
 }
-
-html.dark-mode .swagger-ui .dialog-ux .modal-ux-header h3 {
-    color: #f8fafc !important;
-}
-
-html.dark-mode .swagger-ui .dialog-ux .modal-ux-content p {
-    color: #cbd5e1 !important;
-}
-
-html.dark-mode .swagger-ui .dialog-ux .modal-ux-content label {
-    color: #f8fafc !important;
-}
-
+html.dark-mode .swagger-ui .dialog-ux .modal-ux-header h3 { color: #f8fafc !important; }
+html.dark-mode .swagger-ui .dialog-ux .modal-ux-content p { color: #cbd5e1 !important; }
+html.dark-mode .swagger-ui .dialog-ux .modal-ux-content label { color: #f8fafc !important; }
 html.dark-mode .swagger-ui .dialog-ux .modal-ux-content input {
     background-color: #020617 !important;
     color: #f8fafc !important;
     border: 1px solid #334155 !important;
 }
 
-/* 7. CORREÇÃO DOS SCHEMAS (Caixas de DTOs) */
-html.dark-mode .swagger-ui .model-toggle {
-    color: #cbd5e1 !important;
-}
+/* Schemas e Tabelas */
+html.dark-mode .swagger-ui .model-toggle { color: #cbd5e1 !important; }
 html.dark-mode .swagger-ui .property-row {
     color: #f8fafc !important;
     border-bottom: 1px solid #334155 !important;
 }
-html.dark-mode .swagger-ui .property-row .property-type {
+html.dark-mode .swagger-ui .property-row .property-type { color: #93c5fd !important; }
+html.dark-mode .swagger-ui .response-control-media-type__accept-message { color: #34d399 !important; }
+html.dark-mode .swagger-ui .response-col_headers pre {
+    background-color: #020617 !important;
+    border: 1px solid #1e293b !important;
     color: #93c5fd !important;
 }
 
 /* ==========================================================================
-   💡 REFINAMENTO FINAL: TEXTOS EM BRANCO E SETAS VISÍVEIS NO DARK MODE
+   7. ☢️ CÓDIGO NUCLEAR (CAÇA-TEXTO-CINZA E PROTEÇÃO DE CORES)
    ========================================================================== */
 
-/* 1. Deixa as descrições das rotas em branco (ex: "Listar usuários") */
-html.dark-mode .swagger-ui .opblock-summary-description {
-    color: #ffffff !important;
-}
-
-/* 2. Deixa as setinhas (v) das rotas brancas e fáceis de ver */
-html.dark-mode .swagger-ui .opblock-summary-control svg {
-    fill: #ffffff !important;
-    stroke: #ffffff !important;
-}
-
-/* 3. Deixa a documentação (Rate Limit, Idempotência) em branco */
-html.dark-mode .swagger-ui .markdown p,
-html.dark-mode .swagger-ui .markdown li,
-html.dark-mode .swagger-ui .renderedMarkdown p,
-html.dark-mode .swagger-ui .renderedMarkdown li,
-html.dark-mode .swagger-ui .info .description {
-    color: #ffffff !important;
-}
-
-/* 4. Deixa o texto das tabelas (Cabeçalhos e conteúdo cinza) em branco */
-html.dark-mode .swagger-ui table thead tr th {
-    color: #ffffff !important;
-}
-html.dark-mode .swagger-ui table tbody tr td {
-    color: #ffffff !important;
-}
-html.dark-mode .swagger-ui table tbody tr td p {
-    color: #ffffff !important;
-}
-
-/* 5. Deixa o texto geral do Response Body (JSON) mais claro */
-html.dark-mode .swagger-ui .microlight {
-    color: #ffffff !important;
-}
-html.dark-mode .swagger-ui .microlight span {
-    /* Deixa as chaves do JSON (que ficam sem cor) brancas */
-    color: #ffffff !important;
-}
-
-/* 6. Deixa aquele texto "Expand all" e "Collapse all" dos Schemas brancos */
-html.dark-mode .swagger-ui .model-toggle,
-html.dark-mode .swagger-ui .model-toggle::after {
-    color: #ffffff !important;
-}
-
-/* ==========================================================================
-   ☢️ CÓDIGO NUCLEAR: CAÇA-TEXTO-CINZA NO DARK MODE
-   ========================================================================== */
-
-/* Força qualquer texto padrão do Swagger a ser branco no modo escuro */
+/* Força a maioria dos textos a ficar branco no fundo escuro */
 html.dark-mode .swagger-ui p,
-html.dark-mode .swagger-ui span,
-html.dark-mode .swagger-ui div,
-html.dark-mode .swagger-ui label,
 html.dark-mode .swagger-ui td,
-html.dark-mode .swagger-ui th {
-    /* A exceção :not() mantém as cores dos botões e do código JSON */
+html.dark-mode .swagger-ui th,
+html.dark-mode .swagger-ui label,
+html.dark-mode .swagger-ui .markdown,
+html.dark-mode .swagger-ui .renderedMarkdown,
+html.dark-mode .swagger-ui .opblock-summary-description,
+html.dark-mode .swagger-ui table thead tr th,
+html.dark-mode .swagger-ui table tbody tr td {
     color: #f8fafc !important;
 }
 
-/* Protege as cores bonitas que já definimos para não virarem brancas */
+/* Deixa as setinhas das rotas e schemas brancas */
+html.dark-mode .swagger-ui .opblock-summary-control svg,
+html.dark-mode .swagger-ui .model-toggle::after,
+html.dark-mode .swagger-ui svg {
+    fill: #f8fafc !important;
+    stroke: #f8fafc !important;
+}
+
+/* PROTEÇÕES: Impede o Código Nuclear de apagar as cores bonitas */
 html.dark-mode .swagger-ui .opblock-summary-method,
 html.dark-mode .swagger-ui .btn,
-html.dark-mode .swagger-ui .response-col_status,
-html.dark-mode .swagger-ui .token,
 html.dark-mode .swagger-ui .model-title,
-html.dark-mode .swagger-ui .property-type {
+html.dark-mode .swagger-ui .opblock-tag a,
+html.dark-mode .swagger-ui .response-col_status {
     color: inherit !important;
+}
+
+/* PROTEÇÃO DO JSON: Garante texto base branco mas mantém os tokens coloridos */
+html.dark-mode .swagger-ui .microlight,
+html.dark-mode .swagger-ui .highlight-code {
+    color: #f8fafc !important;
+}
+html.dark-mode .swagger-ui .microlight *,
+html.dark-mode .swagger-ui .highlight-code * {
+    color: unset !important; /* Deixa a biblioteca do Swagger colorir o JSON */
+}
+html.dark-mode .swagger-ui .token {
+    color: inherit !important; /* Mantém as cores originais dos tokens (verde, roxo, etc) */
 }
