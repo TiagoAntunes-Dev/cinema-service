@@ -657,3 +657,28 @@ html.dark-mode .swagger-ui .model-toggle,
 html.dark-mode .swagger-ui .model-toggle::after {
     color: #ffffff !important;
 }
+
+/* ==========================================================================
+   ☢️ CÓDIGO NUCLEAR: CAÇA-TEXTO-CINZA NO DARK MODE
+   ========================================================================== */
+
+/* Força qualquer texto padrão do Swagger a ser branco no modo escuro */
+html.dark-mode .swagger-ui p,
+html.dark-mode .swagger-ui span,
+html.dark-mode .swagger-ui div,
+html.dark-mode .swagger-ui label,
+html.dark-mode .swagger-ui td,
+html.dark-mode .swagger-ui th {
+    /* A exceção :not() mantém as cores dos botões e do código JSON */
+    color: #f8fafc !important;
+}
+
+/* Protege as cores bonitas que já definimos para não virarem brancas */
+html.dark-mode .swagger-ui .opblock-summary-method,
+html.dark-mode .swagger-ui .btn,
+html.dark-mode .swagger-ui .response-col_status,
+html.dark-mode .swagger-ui .token,
+html.dark-mode .swagger-ui .model-title,
+html.dark-mode .swagger-ui .property-type {
+    color: inherit !important;
+}
