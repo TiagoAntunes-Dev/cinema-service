@@ -602,10 +602,7 @@ html.dark-mode .swagger-ui .microlight,
 html.dark-mode .swagger-ui .highlight-code {
     color: #f8fafc !important;
 }
-html.dark-mode .swagger-ui .microlight *,
-html.dark-mode .swagger-ui .highlight-code * {
-    color: unset !important; /* Deixa a biblioteca do Swagger colorir o JSON */
-}
+/* (removido o "color: unset" em .microlight *: ele apagava as cores inline que o Swagger põe no JSON) */
 html.dark-mode .swagger-ui .token {
     color: inherit !important; /* Mantém as cores originais dos tokens (verde, roxo, etc) */
 }
@@ -780,4 +777,51 @@ html.dark-mode .swagger-ui textarea {
     background-color: #020617 !important;
     color: #f8fafc !important;
     border: 1px solid #334155 !important;
+}
+
+/* ==========================================================================
+   4. 🎨 JSON DAS RESPOSTAS (Response body) E TÍTULOS CINZAS
+   O Swagger colore o JSON com a classe .hljs-attr (chaves) e com style="color:..."
+   inline (valores). Aqui só trocamos essas cores; nada é apagado.
+   ========================================================================== */
+
+/* Chaves */
+html.dark-mode .swagger-ui .microlight .hljs-attr,
+html.dark-mode .swagger-ui .highlight-code .hljs-attr {
+    color: #f87171 !important;      /* vermelho claro */
+}
+
+/* Valores: o Swagger usa um rgb fixo por tipo no style inline */
+html.dark-mode .swagger-ui .microlight span[style*="162, 252, 162"],
+html.dark-mode .swagger-ui .highlight-code span[style*="162, 252, 162"] {
+    color: #4ade80 !important;      /* strings: verde */
+}
+html.dark-mode .swagger-ui .microlight span[style*="211, 99, 99"],
+html.dark-mode .swagger-ui .highlight-code span[style*="211, 99, 99"] {
+    color: #60a5fa !important;      /* números: azul */
+}
+html.dark-mode .swagger-ui .microlight span[style*="252, 194, 140"],
+html.dark-mode .swagger-ui .highlight-code span[style*="252, 194, 140"] {
+    color: #fbbf24 !important;      /* true / false / null: âmbar */
+}
+
+/* Títulos cinzas: Curl, Request URL, Server response, Response body, Response headers... */
+html.dark-mode .swagger-ui .opblock-body h4,
+html.dark-mode .swagger-ui .opblock-body h5,
+html.dark-mode .swagger-ui .responses-inner h4,
+html.dark-mode .swagger-ui .responses-inner h5 {
+    color: #f8fafc !important;
+}
+
+/* Textos em Markdown (descrição da API): títulos, listas, negrito */
+html.dark-mode .swagger-ui .markdown h1, html.dark-mode .swagger-ui .markdown h2,
+html.dark-mode .swagger-ui .markdown h3, html.dark-mode .swagger-ui .markdown h4,
+html.dark-mode .swagger-ui .renderedMarkdown h1, html.dark-mode .swagger-ui .renderedMarkdown h2,
+html.dark-mode .swagger-ui .renderedMarkdown h3, html.dark-mode .swagger-ui .renderedMarkdown h4,
+html.dark-mode .swagger-ui .info li,
+html.dark-mode .swagger-ui .markdown li,
+html.dark-mode .swagger-ui .renderedMarkdown li,
+html.dark-mode .swagger-ui .markdown strong,
+html.dark-mode .swagger-ui .renderedMarkdown strong {
+    color: #f8fafc !important;
 }
