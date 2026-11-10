@@ -609,3 +609,57 @@ html.dark-mode .swagger-ui .highlight-code * {
 html.dark-mode .swagger-ui .token {
     color: inherit !important; /* Mantém as cores originais dos tokens (verde, roxo, etc) */
 }
+
+/* ==========================================================================
+   🔧 CORREÇÃO FINAL: JSON COLORIDO, SCHEMAS LIMPOS E TEXTOS BRANCOS
+   ========================================================================== */
+
+/* 1. COLORIR O JSON (Vermelho para chaves/booleanos, Verde para strings, Azul para números) */
+html.dark-mode .swagger-ui .microlight .token.property,
+html.dark-mode .swagger-ui .microlight .token.boolean,
+html.dark-mode .swagger-ui .highlight-code .token.property,
+html.dark-mode .swagger-ui .highlight-code .token.boolean {
+    color: #f87171 !important; /* Vermelho claro */
+}
+
+html.dark-mode .swagger-ui .microlight .token.string,
+html.dark-mode .swagger-ui .highlight-code .token.string {
+    color: #4ade80 !important; /* Verde */
+}
+
+html.dark-mode .swagger-ui .microlight .token.number,
+html.dark-mode .swagger-ui .highlight-code .token.number {
+    color: #60a5fa !important; /* Azul */
+}
+
+/* 2. LIMPAR O FUNDO BRANCO DOS SCHEMAS ("Vômito visual") */
+html.dark-mode .swagger-ui .model-box,
+html.dark-mode .swagger-ui .model-title,
+html.dark-mode .swagger-ui .property-name,
+html.dark-mode .swagger-ui .model-box span,
+html.dark-mode .swagger-ui .model-toggle {
+    background-color: transparent !important; /* Remove as caixinhas brancas */
+    color: #f8fafc !important; /* Força o texto a ficar branco */
+    border: none !important;
+}
+
+/* Deixa o nome das propriedades em um roxo claro e os tipos em azul */
+html.dark-mode .swagger-ui .property-name {
+    color: #cbd5e1 !important;
+}
+html.dark-mode .swagger-ui .property-type {
+    color: #93c5fd !important;
+}
+
+/* 3. FORÇAR TEXTOS DA DOCUMENTAÇÃO A FICAREM BRANCOS (Regras de negócio) */
+html.dark-mode .swagger-ui .markdown *,
+html.dark-mode .swagger-ui .renderedMarkdown * {
+    color: #f8fafc !important;
+}
+
+/* Garante que o fundo dos blocos de código no markdown continuem escuros */
+html.dark-mode .swagger-ui .markdown code,
+html.dark-mode .swagger-ui .markdown pre {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+}
