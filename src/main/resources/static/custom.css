@@ -632,34 +632,152 @@ html.dark-mode .swagger-ui .highlight-code .token.number {
     color: #60a5fa !important; /* Azul */
 }
 
-/* 2. LIMPAR O FUNDO BRANCO DOS SCHEMAS ("Vômito visual") */
-html.dark-mode .swagger-ui .model-box,
-html.dark-mode .swagger-ui .model-title,
-html.dark-mode .swagger-ui .property-name,
-html.dark-mode .swagger-ui .model-box span,
-html.dark-mode .swagger-ui .model-toggle {
-    background-color: transparent !important; /* Remove as caixinhas brancas */
-    color: #f8fafc !important; /* Força o texto a ficar branco */
+/* ==========================================================================
+   2. 🎞️ SCHEMAS (seção "Schemas" + aba "Schema" dentro das respostas)
+   --------------------------------------------------------------------------
+   REGRA: nunca mirar em "span" genérico. Cada pedaço do Schema tem sua classe:
+     .model-title / .model-title__text  → nome do DTO (APIError)
+     table.model td:first-of-type        → nome do campo (status, message)
+     .prop-type                          → tipo (string, integer, boolean)
+     .prop-format                        → formato ($int32, $date-time)
+     .model .property                    → restrições (example:, maxLength:)
+     .model-toggle::after                → seta (é background-image, não SVG!)
+   ========================================================================== */
+
+/* 2.1 Caixas: sem fundo/borda próprios. O "cartão" fica por conta do .model-container */
+html.dark-mode .swagger-ui .model-box {
+    background: transparent !important;
     border: none !important;
 }
 
-/* Deixa o nome das propriedades em um roxo claro e os tipos em azul */
-html.dark-mode .swagger-ui .property-name {
-    color: #cbd5e1 !important;
+html.dark-mode .swagger-ui section.models .model-container {
+    background: rgba(2, 6, 23, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
-html.dark-mode .swagger-ui .property-type {
+
+html.dark-mode .swagger-ui section.models .model-container:hover {
+    background: rgba(2, 6, 23, 0.85) !important;
+}
+
+/* 2.2 Nome do DTO (roxo claro) e nome dos campos (branco) */
+html.dark-mode .swagger-ui .model-title,
+html.dark-mode .swagger-ui .model-title__text {
+    color: #818cf8 !important;
+    font-weight: 700 !important;
+}
+
+html.dark-mode .swagger-ui table.model tbody tr td:first-of-type {
+    color: #f8fafc !important;
+}
+
+/* 2.3 Tipos de dado: cada <span> com a sua cor */
+html.dark-mode .swagger-ui .prop-type {
+    color: #93c5fd !important;   /* azul claro: string, integer, boolean */
+}
+
+html.dark-mode .swagger-ui .prop-format {
+    color: #fdba74 !important;   /* laranja claro: ($int32), ($date-time) */
+}
+
+html.dark-mode .swagger-ui .prop-enum,
+html.dark-mode .swagger-ui .model .property,
+html.dark-mode .swagger-ui .model .property.primitive {
+    color: #94a3b8 !important;   /* restrições: example, maxLength, readOnly, Enum */
+}
+
+/* 2.4 Setas de expandir (são background-image preto, então "fill" não funciona: inverte) */
+html.dark-mode .swagger-ui .model-toggle::after {
+    filter: invert(1) brightness(1.15);
+}
+
+/* 2.5 Schemas de OpenAPI 3.1 (json-schema-2020-12) - só entra em ação se o spec for 3.1 */
+html.dark-mode .swagger-ui .json-schema-2020-12 {
+    background-color: rgba(2, 6, 23, 0.6) !important;
+}
+
+html.dark-mode .swagger-ui .model-box .json-schema-2020-12 {
+    background-color: transparent !important;
+}
+
+/* Título do Schema e "Expand all" são <button>: sem isso ficam com o cinza padrão do navegador */
+html.dark-mode .swagger-ui .json-schema-2020-12-accordion,
+html.dark-mode .swagger-ui .json-schema-2020-12-expand-deep-button {
+    background: transparent !important;
+    border: none !important;
+}
+
+html.dark-mode .swagger-ui .json-schema-2020-12__title,
+html.dark-mode .swagger-ui .json-schema-2020-12-property .json-schema-2020-12__title,
+html.dark-mode .swagger-ui .json-schema-2020-12-keyword__name--primary,
+html.dark-mode .swagger-ui .json-schema-2020-12-keyword__value--primary,
+html.dark-mode .swagger-ui .json-schema-2020-12__attribute {
+    color: #f8fafc !important;
+}
+
+html.dark-mode .swagger-ui .json-schema-2020-12:not(.json-schema-2020-12--embedded) > .json-schema-2020-12-head .json-schema-2020-12__title:first-of-type {
+    color: #818cf8 !important;
+}
+
+html.dark-mode .swagger-ui .json-schema-2020-12__attribute--primary {
     color: #93c5fd !important;
 }
 
-/* 3. FORÇAR TEXTOS DA DOCUMENTAÇÃO A FICAREM BRANCOS (Regras de negócio) */
-html.dark-mode .swagger-ui .markdown *,
-html.dark-mode .swagger-ui .renderedMarkdown * {
+html.dark-mode .swagger-ui .json-schema-2020-12__attribute--muted,
+html.dark-mode .swagger-ui .json-schema-2020-12-keyword__name--secondary,
+html.dark-mode .swagger-ui .json-schema-2020-12-keyword__value--secondary,
+html.dark-mode .swagger-ui .json-schema-2020-12-keyword--description,
+html.dark-mode .swagger-ui .json-schema-2020-12-keyword__value--const,
+html.dark-mode .swagger-ui .json-schema-2020-12-expand-deep-button {
+    color: #94a3b8 !important;
+}
+
+html.dark-mode .swagger-ui .json-schema-2020-12-body,
+html.dark-mode .swagger-ui .json-schema-2020-12-keyword__children {
+    border-left-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* ==========================================================================
+   3. ✨ EXTRAS DO DARK MODE (mesma tela dos Schemas, mesmo problema de contraste)
+   Bloco independente: pode apagar inteiro sem afetar o bloco 2.
+   ========================================================================== */
+
+/* Barras "Parameters" e "Responses" (eram brancas com texto escuro) */
+html.dark-mode .swagger-ui .opblock .opblock-section-header {
+    background: rgba(2, 6, 23, 0.6) !important;
+    box-shadow: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+html.dark-mode .swagger-ui .opblock .opblock-section-header h4,
+html.dark-mode .swagger-ui .opblock .opblock-section-header label {
     color: #f8fafc !important;
 }
 
-/* Garante que o fundo dos blocos de código no markdown continuem escuros */
-html.dark-mode .swagger-ui .markdown code,
-html.dark-mode .swagger-ui .markdown pre {
-    background-color: #1e293b !important;
+/* Abas "Example Value | Schema" */
+html.dark-mode .swagger-ui .tab li {
+    color: #94a3b8 !important;
+}
+
+html.dark-mode .swagger-ui .tab li.active {
     color: #f8fafc !important;
+}
+
+html.dark-mode .swagger-ui .tab li:first-of-type::after {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Nome, tipo e local (path/query) dos parâmetros */
+html.dark-mode .swagger-ui .parameter__name { color: #f8fafc !important; }
+html.dark-mode .swagger-ui .parameter__type { color: #93c5fd !important; }
+html.dark-mode .swagger-ui .parameter__in   { color: #94a3b8 !important; }
+
+/* Campos de texto do "Try it out" (a regra do light mode deixava o fundo branco) */
+html.dark-mode .swagger-ui input[type=text],
+html.dark-mode .swagger-ui input[type=password],
+html.dark-mode .swagger-ui input[type=search],
+html.dark-mode .swagger-ui input[type=email],
+html.dark-mode .swagger-ui textarea {
+    background-color: #020617 !important;
+    color: #f8fafc !important;
+    border: 1px solid #334155 !important;
 }
