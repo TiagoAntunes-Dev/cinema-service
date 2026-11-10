@@ -8,12 +8,10 @@ import org.springframework.data.web.config.PageableHandlerMethodArgumentResolver
 public class PageableConfig {
 
     @Bean
-    public PageableHandlerMethodArgumentResolverCustomizer pageableCustomizer() {
-        return resolver -> {
-            // Define o limite máximo de itens por página
-            resolver.setMaxPageSize(50); 
-            // Opcional: define o tamanho padrão se o cliente não enviar o parâmetro
-            // resolver.setFallbackPageable(PageRequest.of(0, 20)); 
-        };
-    }
+public PageableHandlerMethodArgumentResolverCustomizer pageableCustomizer() {
+    return resolver -> {
+        resolver.setMaxPageSize(50); // Limite máximo
+        resolver.setFallbackPageable(PageRequest.of(0, 20)); // Padrão se não for enviado
+    };
+}
 }
