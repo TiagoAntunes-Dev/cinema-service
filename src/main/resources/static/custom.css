@@ -607,3 +607,53 @@ html.dark-mode .swagger-ui .property-row {
 html.dark-mode .swagger-ui .property-row .property-type {
     color: #93c5fd !important;
 }
+
+/* ==========================================================================
+   💡 REFINAMENTO FINAL: TEXTOS EM BRANCO E SETAS VISÍVEIS NO DARK MODE
+   ========================================================================== */
+
+/* 1. Deixa as descrições das rotas em branco (ex: "Listar usuários") */
+html.dark-mode .swagger-ui .opblock-summary-description {
+    color: #ffffff !important;
+}
+
+/* 2. Deixa as setinhas (v) das rotas brancas e fáceis de ver */
+html.dark-mode .swagger-ui .opblock-summary-control svg {
+    fill: #ffffff !important;
+    stroke: #ffffff !important;
+}
+
+/* 3. Deixa a documentação (Rate Limit, Idempotência) em branco */
+html.dark-mode .swagger-ui .markdown p,
+html.dark-mode .swagger-ui .markdown li,
+html.dark-mode .swagger-ui .renderedMarkdown p,
+html.dark-mode .swagger-ui .renderedMarkdown li,
+html.dark-mode .swagger-ui .info .description {
+    color: #ffffff !important;
+}
+
+/* 4. Deixa o texto das tabelas (Cabeçalhos e conteúdo cinza) em branco */
+html.dark-mode .swagger-ui table thead tr th {
+    color: #ffffff !important;
+}
+html.dark-mode .swagger-ui table tbody tr td {
+    color: #ffffff !important;
+}
+html.dark-mode .swagger-ui table tbody tr td p {
+    color: #ffffff !important;
+}
+
+/* 5. Deixa o texto geral do Response Body (JSON) mais claro */
+html.dark-mode .swagger-ui .microlight {
+    color: #ffffff !important;
+}
+html.dark-mode .swagger-ui .microlight span {
+    /* Deixa as chaves do JSON (que ficam sem cor) brancas */
+    color: #ffffff !important;
+}
+
+/* 6. Deixa aquele texto "Expand all" e "Collapse all" dos Schemas brancos */
+html.dark-mode .swagger-ui .model-toggle,
+html.dark-mode .swagger-ui .model-toggle::after {
+    color: #ffffff !important;
+}
