@@ -3,6 +3,10 @@ package com.cinelog.api.Configuration; // Alinhado com o padrão de pacotes do s
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.media.Schema;
 import java.util.LinkedHashMap;
+import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.MediaType;
+import io.swagger.v3.oas.models.examples.Example;
+import io.swagger.v3.oas.models.responses.ApiResponses;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -390,6 +394,136 @@ Para testar a API do zero, siga esta sequência:
                     .forEach(e -> ordenado.put(e.getKey(), e.getValue()));
 
             components.setSchemas(ordenado);
+        };
+    }
+    @Bean
+    public OpenApiCustomizer errorExamplesCustomizer() {
+        return openApi -> {
+            if (openApi.getPaths() == null) return;
+
+            // Usando Map.ofEntries para contornar o limite de 10 itens do Map.of()
+            Map<String, String> exemplosErro = Map.ofEntries(
+                    Map.entry("400", """
+                    {
+                      "timestamp": "2026-11-11T19:00:00",
+                      "status": 400,
+                      "errorMessage": "BAD_REQUEST",
+                      "message": "Erro de validação: 1 problema(s) encontrado(s). Veja os detalhes em 'errors'.",
+                      "path": "/api/recurso",
+                      "errors": ["campo: O campo não pode estar em branco"]
+                    }
+                    """),
+                    Map.entry("401", """
+                    {
+                      "timestamp": "2026-11-11T19:00:00",
+                      "status": 401,
+                      "errorMessage": "UNAUTHORIZED",
+                      "message": "Chave de API ausente ou inválida (cabeçalho X-API-Key)",
+                      "path": "/api/recurso"
+                    }
+                    """),
+                    Map.entry("403", """
+                    {
+                      "timestamp": "2026-11-11T19:00:00",
+                      "status": 403,
+                      "errorMessage": "FORBIDDEN",
+                      "message": "Origem não autorizada no CORS",
+                      "path": "/api/recurso"
+                    }
+                    """),
+                    Map.entry("404", """
+                    {
+                      "timestamp": "2026-11-11T19:00:00",
+                      "status": 404,
+                      "errorMessage": "NOT_FOUND",
+                      "message": "Recurso não encontrado com o ID: 999",
+                      "path": "/api/recurso/999"
+                    }
+                    """),
+                    Map.entry("405", """
+                    {
+                      "timestamp": "2026-11-11T19:00:00",
+                      "status": 405,
+                      "errorMessage": "METHOD_NOT_ALLOWED",
+                      "message": "O método PATCH não é permitido para a rota /api/recurso.",
+                      "path": "/api/recurso"
+                    }
+                    """),
+                    Map.entry("409", """
+                    {
+                      "timestamp": "2026-11-11T19:00:00",
+                      "status": 409,
+                      "errorMessage": "CONFLICT",
+                      "message": "Registro duplicado ou ainda em uso por outro registro.",
+                      "path": "/api/recurso"
+                    }
+                    """),
+                    Map.entry("415", """
+                    {
+                      "timestamp": "2026-11-11T19:00:00",
+                      "status": 415,
+                      "errorMessage": "UNSUPPORTED_MEDIA_TYPE",
+                      "message": "Formato de conteúdo não suportado. Envie o corpo como application/json.",
+                      "path": "/api/recurso"
+                    }
+                    """),
+                    Map.entry("422", """
+                    {
+                      "timestamp": "2026-11-11T19:00:00",
+                      "status": 422,
+                      "errorMessage": "UNPROCESSABLE_ENTITY",
+                      "message": "A chave de idempotência informada já foi usada com um corpo de requisição diferente.",
+                      "path": "/api/recurso"
+                    }
+                    """),
+                    Map.entry("429", """
+                    {
+                      "timestamp": "2026-11-11T19:00:00",
+                      "status": 429,
+                      "errorMessage": "TOO_MANY_REQUESTS",
+                      "message": "Limite de requisições excedido. Tente novamente em 1 segundo(s).",
+                      "path": "/api/recurso"
+                    }
+                    """),
+                    Map.entry("500", """
+                    {
+                      "timestamp": "2026-11-11T19:00:00",
+                      "status": 500,
+                      "errorMessage": "INTERNAL_SERVER_ERROR",
+                      "message": "Ocorreu um erro interno no servidor.",
+                      "path": "/api/recurso"
+                    }
+                    """),
+                    Map.entry("503", """
+                    {
+                      "timestamp": "2026-11-11T19:00:00",
+                      "status": 503,
+                      "errorMessage": "SERVICE_UNAVAILABLE",
+                      "message": "O serviço está temporariamente indisponível. Tente novamente em alguns instantes.",
+                      "path": "/api/recurso"
+                    }
+                    """)
+            );
+
+            // Varre todos os endpoints da API
+            openApi.getPaths().values().forEach(pathItem -> {
+                pathItem.readOperations().forEach(operation -> {
+                    ApiResponses responses = operation.getResponses();
+                    if (responses == null) return;
+
+                    responses.forEach((codigoStatus, response) -> {
+                        if (exemplosErro.containsKey(codigoStatus)) {
+                            Schema<?> apiErrorSchema = new Schema<>().$ref("#/components/schemas/APIError");
+                            Example exemplo = new Example().value(exemplosErro.get(codigoStatus));
+
+                            response.setContent(new Content().addMediaType(
+                                    "application/json",
+                                    new MediaType().schema(apiErrorSchema).addExamples("Exemplo de Erro", exemplo)
+                            ));
+                        }
+                    });
+                });
+            });
         };
     }
 }
