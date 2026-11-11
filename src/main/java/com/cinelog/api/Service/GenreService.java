@@ -10,12 +10,14 @@ import com.cinelog.api.Repository.MovieRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * GenreService: contém as regras de negócio dos gêneros.
  * O Controller recebe a requisição e chama este Service, que valida as regras e usa os Repositories.
  */
 @Service
+@Transactional
 public class GenreService {
 
     private final GenreRepository genreRepository;
@@ -47,6 +49,7 @@ public class GenreService {
     }
 
     // READ: Busca um gênero pelo ID
+    @Transactional(readOnly = true)
     public GenreResponse findById(long id) {
         // Se não existir, lança o erro 404 (tratado pelo GlobalExceptionHandler)
         Genre genre = genreRepository.findById(id)
@@ -56,6 +59,7 @@ public class GenreService {
     }
 
     // READ: Lista os gêneros de forma paginada
+    @Transactional(readOnly = true)
     public Page<GenreResponse> findAll(Pageable pageable) {
         // findAll(pageable) busca no banco só a página pedida (ex.: 10 registros da página 0)
         Page<Genre> genres = genreRepository.findAll(pageable);
@@ -66,6 +70,7 @@ public class GenreService {
     }
 
     // READ (consulta personalizada): busca gêneros cujo nome contém o texto informado, de forma paginada
+    @Transactional(readOnly = true)
     public Page<GenreResponse> findByName(String nome, Pageable pageable) {
         Page<Genre> genres = genreRepository.findByNomeContainingIgnoreCase(nome, pageable);
 

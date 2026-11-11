@@ -6,11 +6,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -31,6 +35,9 @@ import java.util.List;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    // Quanto tempo (em segundos) o cliente deve esperar antes de tentar de novo quando o banco está indisponível.
+    private static final int DATABASE_RETRY_AFTER_SECONDS = 30;
 
     // =====================================================================================
     // 400 - BAD REQUEST
@@ -110,6 +117,32 @@ public class GlobalExceptionHandler {
                 + " uma das versões disponíveis: " + String.join(", ", WebConfig.SUPPORTED_API_VERSIONS) + ".";
 
         return respond(HttpStatus.BAD_REQUEST, message, request);
+    }
+
+    // Ordenação por um campo que não existe (ex.: ?sort=campoInexistente). É erro do cliente, não do servidor.
+    // O Spring Data lança PropertyReferenceException e o JPA costuma embrulhá-la numa InvalidDataAccessApiUsageException,
+    // por isso os dois casos são tratados. Só vira 400 quando a requisição realmente trouxe o parâmetro "sort";
+    // fora disso o erro é um bug do código e continua sendo 500.
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<APIError> handleInvalidSortProperty(
+            PropertyReferenceException exception,
+            HttpServletRequest request) {
+
+        if (request.getParameter("sort") != null) {
+            return respond(HttpStatus.BAD_REQUEST, invalidSortMessage(request), request);
+        }
+        return handleGenericException(exception, request);
+    }
+
+    @ExceptionHandler(InvalidDataAccessApiUsageException.class)
+    public ResponseEntity<APIError> handleInvalidDataAccessUsage(
+            InvalidDataAccessApiUsageException exception,
+            HttpServletRequest request) {
+
+        if (request.getParameter("sort") != null && causedByInvalidSort(exception)) {
+            return respond(HttpStatus.BAD_REQUEST, invalidSortMessage(request), request);
+        }
+        return handleGenericException(exception, request);
     }
 
     @ExceptionHandler(BusinessException.class)
@@ -202,6 +235,28 @@ public class GlobalExceptionHandler {
     }
 
     // =====================================================================================
+    // 503 - SERVICE UNAVAILABLE
+    // =====================================================================================
+
+    // Banco de dados fora do ar (reiniciando, sem conexão...). Não é bug da API: o cliente deve tentar de novo mais tarde.
+    @ExceptionHandler({DataAccessResourceFailureException.class, CannotCreateTransactionException.class})
+    public ResponseEntity<APIError> handleDatabaseUnavailable(
+            Exception exception,
+            HttpServletRequest request) {
+
+        log.error("Banco de dados indisponível em {} {}: {}",
+                request.getMethod(), request.getRequestURI(), exception.getMessage());
+
+        APIError apiError = createError(HttpStatus.SERVICE_UNAVAILABLE,
+                "O serviço está temporariamente indisponível. Tente novamente em alguns instantes.",
+                request, List.of());
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(DATABASE_RETRY_AFTER_SECONDS))
+                .body(apiError);
+    }
+
+    // =====================================================================================
     // Exceções genéricas
     // =====================================================================================
 
@@ -255,6 +310,35 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<APIError> respond(HttpStatus status, String message, HttpServletRequest request, List<String> errors) {
         return ResponseEntity.status(status).body(createError(status, message, request, errors));
+    }
+
+    // Procura, na cadeia de causas, o sinal de que a ordenação pediu um campo inexistente.
+    private boolean causedByInvalidSort(Throwable exception) {
+        Throwable current = exception;
+        for (int depth = 0; current != null && depth < 10; depth++) {
+            if (current instanceof PropertyReferenceException) {
+                return true;
+            }
+            String message = current.getMessage();
+            if (message != null && (message.contains("Unable to locate Attribute")
+                    || message.contains("Could not resolve attribute")
+                    || message.contains("No property"))) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
+
+    private String invalidSortMessage(HttpServletRequest request) {
+        String[] sorts = request.getParameterValues("sort");
+        String informed = "";
+        if (sorts != null) {
+            String joined = String.join(" | ", sorts);
+            informed = " (informado: " + (joined.length() > 100 ? joined.substring(0, 100) + "..." : joined) + ")";
+        }
+        return "Parâmetro 'sort' inválido" + informed
+                + ". Use apenas campos que existem no recurso, no formato campo,asc ou campo,desc.";
     }
 
     private String describeExpectedType(Class<?> type) {

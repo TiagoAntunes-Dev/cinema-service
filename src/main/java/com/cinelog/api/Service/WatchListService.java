@@ -21,6 +21,7 @@ import java.util.List;
  * WatchListService: regras de negócio das watchlists (listas de filmes de um usuário).
  */
 @Service
+@Transactional
 public class WatchListService {
 
     // Campos final: imutáveis após a construção (boa prática + consistência com os Controllers)
@@ -53,6 +54,7 @@ public class WatchListService {
     }
 
     // READ: Busca uma watchlist pelo ID
+    @Transactional(readOnly = true)
     public WatchListResponse findById(long id) {
         WatchList watchList = watchListRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -62,6 +64,7 @@ public class WatchListService {
     }
 
     // READ: Lista todas as watchlists de forma paginada
+    @Transactional(readOnly = true)
     public Page<WatchListResponse> findAll(Pageable pageable) {
         // .map(this::toResponse) é o jeito idiomático de transformar cada entidade em DTO
         return watchListRepository.findAll(pageable)
@@ -69,6 +72,7 @@ public class WatchListService {
     }
 
     // READ (consulta personalizada): watchlists de um usuário
+    @Transactional(readOnly = true)
     public Page<WatchListResponse> findByUser(long userId, Pageable pageable) {
         // Se o usuário não existe, é erro 404 (e não uma lista vazia)
         if (!userRepository.existsById(userId)) {
@@ -104,7 +108,6 @@ public class WatchListService {
 
     // DELETE: Apaga uma watchlist e os itens dela.
     // @Transactional: apagar os itens e apagar a lista acontecem juntos ou nenhum acontece.
-    @Transactional
     public void deleteWatchList(long id) {
         // Buscar a entidade (e não só existsById) evita uma query extra:
         // 1 query em vez de "exists" + "deleteById".

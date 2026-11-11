@@ -15,7 +15,13 @@ import jakarta.validation.constraints.NotNull;
  * uma entidade com dois @ManyToOne: um para a Watchlist e outro para o Movie.
  */
 @Entity
-@Table(name = "watchlist_items")
+// UniqueConstraint: o BANCO não deixa o mesmo filme entrar duas vezes na mesma watchlist.
+// A checagem no Service (existsByWatchlistIdAndMovieId) dá a mensagem amigável; esta constraint é a garantia
+// quando duas requisições chegam ao mesmo tempo (nesse caso o erro vira 409 pelo GlobalExceptionHandler).
+@Table(name = "watchlist_items",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_watchlist_items_watchlist_movie",
+                columnNames = {"watchlist_id", "movie_id"}))
 public class WatchlistItem {
 
     @Id
@@ -100,3 +106,4 @@ public class WatchlistItem {
         return "WatchlistItem{id=" + id + ", status=" + status + ", nota=" + nota + "}";
     }
 }
+

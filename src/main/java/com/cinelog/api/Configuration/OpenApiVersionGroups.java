@@ -39,8 +39,8 @@ public class OpenApiVersionGroups {
 
     private GroupedOpenApi versionGroup(int version) {
         String description = (version >= WebConfig.FIRST_SECURED_VERSION)
-                ? "completa: chave de API, rate limit e idempotência"
-                : "simples";
+                ? "completa: chave de API, rate limit por chave e idempotência"
+                : "simples: sem chave de API, rate limit por IP";
 
         return GroupedOpenApi.builder()
                 .group("v" + version)                                      // vira /v3/api-docs/v1, /v3/api-docs/v2...
@@ -121,6 +121,8 @@ public class OpenApiVersionGroups {
             if (operation.getResponses() != null) {
                 operation.getResponses().remove("422");
             }
+            // A v1 também tem rate limit (por IP)
+            addErrorResponse(operation, "429", "Limite de requisições por IP excedido. Veja o cabeçalho Retry-After");
             return;
         }
 

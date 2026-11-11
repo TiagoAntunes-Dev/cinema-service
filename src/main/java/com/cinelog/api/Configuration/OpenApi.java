@@ -52,380 +52,244 @@ public class OpenApi {
                         .title("🎬 Cinelog API — Catalogação de Filmes e Watchlists")
                         .version(appVersion)
                         .description("""
-                                # 🍿 Cinelog API
+                                ## 🍿 Bem-vindo à Cinelog API
 
-A **Cinelog API** é uma API REST desenvolvida para catalogar filmes e gerenciar watchlists pessoais.
+                                A **Cinelog API** é uma API REST para **catalogar filmes** e **montar watchlists pessoais**.
+                                Cadastre filmes, ligue-os a gêneros, guarde detalhes (sinopse, orçamento, país de origem)
+                                e acompanhe o que cada usuário quer ver, está vendo ou já viu, com nota de 1 a 10.
 
-Com ela, é possível cadastrar filmes, associá-los a gêneros, armazenar informações complementares — como sinopse, orçamento e país de origem — e acompanhar os filmes que cada usuário deseja assistir, está assistindo ou já assistiu.
+                                > 💡 **Dica:** use o botão **Try it out** em cada endpoint para testar direto desta página.
 
-Também é possível atribuir notas de 1 a 10 aos filmes concluídos.
+                                ---
 
-> 💡 **Dica:** utilize o botão **Try it out** em cada endpoint para testar as requisições diretamente pelo Swagger UI.
+                                ## 🌐 Detalhes do endpoint
 
----
+                                | | Informação |
+                                |---|---|
+                                | 🔗 **URL base** | `http://localhost:8080/api` (desenvolvimento) |
+                                | 🧭 **Rotas** | Substantivos no plural: `/users`, `/genres`, `/movies`, `/movie-details`, `/watchlists`, `/watchlist-items` |
+                                | 📦 **Formato** | JSON com codificação UTF-8 (acentos são aceitos) |
+                                | 🔓 **Autenticação** | Não exigida nesta versão |
+                                | 🗄️ **Banco de dados** | H2 em memória |
 
-## 🌐 1. Informações gerais
+                                > ⚠️ **Atenção:** como o banco é em memória, os dados **voltam ao estado inicial**
+                                > sempre que a aplicação reinicia.
 
-| Informação | Descrição |
-|---|---|
-| **URL base (produção)** | `https://cinema-service-sv1b.onrender.com/api` |
-| **URL base (desenvolvimento)** | `http://localhost:8080/api` |
-| **Rotas** | `/users`, `/genres`, `/movies`, `/movie-details`, `/watchlists`, `/watchlist-items` |
-| **Formato** | JSON com codificação UTF-8 |
-| **Banco de dados** | MySQL |
-| **Persistência** | Os dados permanecem armazenados entre reinicializações |
+                                ---
 
-### Cabeçalhos HTTP
+                                ## 📨 Cabeçalhos
 
-| Cabeçalho | Quando utilizar | Valor |
-|---|---|---|
-| `Content-Type` | Requisições POST, PUT e PATCH | `application/json` |
-| `Accept` | Opcional | `application/json` ou `*/*` |
-| `X-API-Version` | Versionamento da API | `1` ou `2` |
-| `X-API-Key` | Obrigatório na versão 2 | Chave de API |
-| `X-Idempotency-Key` | Opcional nos POST da versão 2 | Identificador único, como um UUID |
+                                | Cabeçalho | Quando usar | Valor |
+                                |---|---|---|
+                                | `Content-Type` | Em `POST`, `PUT` e `PATCH` | `application/json` |
+                                | `Accept` | Opcional | `application/json` ou `*/*` |
+                                | `X-API-Version` | Opcional | Versão da API. Padrão: `1`. Veja a seção de versionamento abaixo |
+                                | `X-API-Key` | **Obrigatório na versão 2** | Chave de API. Use o botão **Authorize** na tela da versão 2 |
+                                | `X-Idempotency-Key` | Opcional, nos `POST` da versão 2 | Texto único (ex.: UUID). Veja a seção de idempotência abaixo |
 
----
+                                ---
 
-## 🔖 2. Versionamento da API
+                                ## 🔖 Versionamento
 
-O versionamento é controlado pelo cabeçalho HTTP `X-API-Version`, e não pela URL.
+                                A versão da API é informada no **cabeçalho** `X-API-Version`, e **não na URL**: as rotas são sempre `/api/...`.
 
-Todas as versões utilizam as mesmas rotas, no formato `/api/...`.
+                                | Requisição | Resultado |
+                                |---|---|
+                                | Sem o cabeçalho | Usa a versão padrão (`1`) |
+                                | `X-API-Version: 1` | Versão 1 |
+                                | `X-API-Version: 2` | Versão 2 |
+                                | `X-API-Version: 99` (inexistente) ou `abc` (formato inválido) | `400 Bad Request` |
 
-### Como funciona
+                                > 🔀 **Cada versão tem a sua tela:** use o seletor **Select a definition** (no topo da página) para alternar entre a
+                                > versão 1 e a versão 2.
 
-| Requisição | Comportamento |
-|---|---|
-| Sem o cabeçalho | Utiliza a versão padrão (`1`) |
-| `X-API-Version: 1` | Executa a versão 1 |
-| `X-API-Version: 2` | Executa a versão 2 |
-| `X-API-Version: 99` | Retorna `400 Bad Request` |
-| `X-API-Version: abc` | Retorna `400 Bad Request` |
+                                | Recurso | Versão 1 (simples) | Versão 2 (completa) |
+                                |---|---|---|
+                                | Chave de API (`X-API-Key`) | não exige | **obrigatória** (`401`) |
+                                | Rate limit | por **IP** (`429` + `Retry-After`) | por **chave de API** (`429` + `Retry-After`) |
+                                | Idempotência (`X-Idempotency-Key`) | ignora | nos `POST` (`422` se o corpo mudar) |
+                                | `GET /movies/{id}` | campo `duracao` | campo `duracaoMinutos` (gêneros continuam como objetos) |
 
-> 🔀 **Importante:** cada versão possui sua própria documentação. Utilize o seletor **Select a definition**, localizado na parte superior do Swagger UI, para alternar entre elas.
+                                > 🔑 Na tela da **versão 2**, clique em **Authorize** e informe a chave de API uma única vez.
+                                > Chave de demonstração: `cinelog-demo-key-123`.
 
-### Comparação entre as versões
+                                ---
 
-| Recurso | Versão 1 | Versão 2 |
-|---|---|---|
-| Chave de API | Não exige | Obrigatória (`401`) |
-| Rate Limit | Sem limite | Por chave de API (`429`) |
-| Idempotência | Ignorada | Disponível nos POST |
-| `GET /movies/{id}` | `duracao` e gêneros como objetos | `duracaoMinutos` e gêneros como texto |
+                                ## 🚦 Limite de requisições (Rate Limit)
 
-### Autenticação na versão 2
+                                A API usa o algoritmo **Token Bucket**: cada cliente tem um "balde" de tokens. Cada requisição gasta **1 token**
+                                e o balde é reabastecido aos poucos. Com o balde vazio, a API responde `429 Too Many Requests`.
+                                
+                                | Versão | Quem é o "cliente" | Valores padrão |
+                                |---|---|---|
+                                | 1 | O **endereço IP** de quem chama | rajada de **100 requisições** e **100 tokens por minuto** |
+                                | 2 | A **chave de API** (`X-API-Key`) | rajada de **100 requisições** e **100 tokens por minuto** |
 
-A versão 2 exige uma chave de API para acessar os endpoints.
+                                | Cabeçalho de resposta | Quando aparece | Significado |
+                                |---|---|---|
+                                | `X-RateLimit-Limit` | Sempre | Tamanho máximo do balde |
+                                | `X-RateLimit-Remaining` | Sempre | Tokens que ainda restam (`0` quando bloqueado) |
+                                | `Retry-After` | Só no `429` | Segundos de espera antes de tentar de novo |
 
-Para configurá-la:
+                                ---
 
-1. Acesse a documentação da versão 2.
-2. Clique em **Authorize**.
-3. Informe sua chave de API.
-4. Confirme a autorização.
+                                ## 🔁 Idempotência
 
-**Chave de demonstração:**
+                                **Somente na versão 2.** Todos os `POST` aceitam o cabeçalho opcional **`X-Idempotency-Key`**, que evita registros duplicados quando
+                                o cliente repete a requisição (clique duplo, retry após timeout).
 
-```text
-cinelog-demo-key-123
-```
+                                | Situação | Resultado |
+                                |---|---|
+                                | Chave nova | Executa normalmente e guarda a resposta por 24 horas |
+                                | Mesma chave e **mesmo corpo** | Devolve a resposta original (`201`, `Location` e corpo) com o cabeçalho `Idempotent-Replayed: true`, sem criar outro registro |
+                                | Mesma chave e **corpo diferente** | `422 Unprocessable Entity` |
+                                | Sem o cabeçalho | Comportamento normal |
 
----
-
-## 🚦 3. Limite de requisições (Rate Limit)
-
-O Rate Limit está disponível exclusivamente na versão 2.
-
-A API utiliza o algoritmo **Token Bucket**, no qual cada cliente, identificado pela chave de API, possui um conjunto de tokens disponíveis para realizar requisições.
-
-Cada requisição consome um token, enquanto o sistema reabastece o saldo gradualmente.
-
-Quando o limite é atingido, a API retorna:
-
-```http
-429 Too Many Requests
-```
-
-### Configuração padrão
-
-| Parâmetro | Valor |
-|---|---|
-| Capacidade máxima do balde | 100 tokens |
-| Taxa de reposição | 100 tokens por minuto |
-
-### Cabeçalhos de resposta
-
-| Cabeçalho | Descrição |
-|---|---|
-| `X-RateLimit-Limit` | Capacidade máxima do balde |
-| `X-RateLimit-Remaining` | Quantidade de tokens restantes |
-| `Retry-After` | Tempo de espera, em segundos, antes de tentar novamente. Presente somente em respostas `429` |
-
----
-
-## 🔁 4. Idempotência
-
-A idempotência está disponível exclusivamente na versão 2.
-
-Todos os endpoints POST aceitam o cabeçalho opcional `X-Idempotency-Key`, que evita a criação de registros duplicados quando uma requisição é enviada novamente.
-
-Esse mecanismo é especialmente útil em situações como:
-
-- Cliques duplicados em botões.
-- Novas tentativas após um timeout.
-- Reenvio de requisições devido a falhas de conexão.
-
-### Comportamento
-
-| Situação | Resultado |
-|---|---|
-| Chave inédita | Executa a operação e armazena a resposta por 24 horas |
-| Mesma chave e mesmo corpo | Retorna a resposta original, sem criar outro registro |
-| Mesma chave e corpo diferente | Retorna `422 Unprocessable Entity` |
-| Sem o cabeçalho | Executa normalmente, sem controle de idempotência |
-
-Quando uma resposta original é reutilizada, a API retorna:
-
-- Status HTTP original (`201`).
-- Cabeçalho `Location` original.
-- Corpo da resposta original.
-- Cabeçalho `Idempotent-Replayed: true`.
-
----
-
-## 🌍 5. CORS (Cross-Origin Resource Sharing)
-
-O CORS permite que aplicações front-end hospedadas em origens diferentes realizem requisições à API diretamente pelo navegador.
-
-Para que os cabeçalhos CORS sejam retornados, a requisição precisa incluir o cabeçalho `Origin`.
-
-### Configuração
-
-| Configuração | Valor |
-|---|---|
-| **Origens permitidas** | `http://localhost:3000`, `http://localhost:5173`, `http://localhost:4200` e o próprio domínio do Render |
-| **Métodos permitidos** | `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS` |
-| **Cabeçalhos aceitos** | `Content-Type`, `Accept`, `X-API-Key`, `X-Idempotency-Key`, `X-API-Version` |
-| **Cabeçalhos expostos** | `Location`, `Retry-After`, `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `Idempotent-Replayed` |
-| **Credenciais (cookies)** | Desativadas |
-| **Cache do preflight** | 1 hora |
-
-> ⚠️ **Atenção:** uma origem não autorizada recebe `403 Forbidden`, com a mensagem `Invalid CORS request`.
-
-**Observação:** o CORS é uma proteção aplicada pelos navegadores. Ferramentas como Postman, Insomnia e cURL não são afetadas por essa restrição.
-
----
-
-## 🗂️ 6. Recursos e relacionamentos
-
-A API possui seis recursos principais:
-
-| Recurso | Descrição | Relacionamento |
-|---|---|---|
-| 👤 **Usuários** | Representam os proprietários das watchlists | 1:N com Watchlists |
-| 🎭 **Gêneros** | Categorias utilizadas para classificar filmes | N:N com Filmes |
-| 🎬 **Filmes** | Catálogo principal de filmes | 1:1 com Detalhes |
-| 📋 **Detalhes dos Filmes** | Armazenam sinopse, orçamento, país e idioma | 1:1 com Filme |
-| 📺 **Watchlists** | Listas pessoais de cada usuário | 1:N com Itens |
-| 🎞️ **Itens da Watchlist** | Associam filmes às listas, com status e nota | N:1 com Filme |
-
-### Visão geral do modelo
-
-```text
-👤 Usuário
-    │
-    └── 📺 Watchlist
-            │
-            └── 🎞️ Item
-                    │
-                    └── 🎬 Filme
-                            │
-                            ├── 📋 Detalhes
-                            │
-                            └── 🎭 Gêneros
-```
-
-### Status de um item da Watchlist
-
-Cada item pode assumir um dos seguintes status:
-
-| Status | Significado | Aceita nota? |
-|---|---|---|
-| `QUERO_VER` | 📌 Filme adicionado para assistir futuramente | Não |
-| `VENDO` | ▶️ Filme em andamento | Não |
-| `VISTO` | ✅ Filme já assistido | Sim (1 a 10) |
-| `ABANDONADO` | 🚫 Filme que o usuário desistiu de assistir | Não |
-
----
-
-## 📄 7. Paginação
-
-Os endpoints de listagem paginados aceitam os seguintes parâmetros:
-
-| Parâmetro | Descrição | Padrão |
-|---|---|---|
-| `page` | Número da página. A primeira página é `0` | `0` |
-| `size` | Quantidade de itens por página | `20` |
-| `sort` | Campo e direção da ordenação | Sem ordenação |
-
-### Exemplo de requisição
-
-```http
-GET /api/movies?page=0&size=10&sort=titulo,asc
-```
-
-A resposta contém:
-
-- Lista de itens encontrados.
-- Número da página atual (`number`).
-- Quantidade de itens por página (`size`).
-- Total de registros (`totalElements`).
-- Total de páginas (`totalPages`).
-- Links para navegação entre as páginas.
-
----
-
-## 🔗 8. HATEOAS
-
-A API utiliza **HATEOAS (Hypermedia as the Engine of Application State)** para fornecer links relacionados aos recursos nas respostas HTTP.
-
-As respostas de sucesso que possuem corpo incluem um objeto `_links`, contendo URLs que permitem ao cliente navegar pelas operações disponíveis.
-
-Exemplos de relações:
-
-- `self`: endereço do próprio recurso.
-- `update`: endereço para atualização.
-- `delete`: endereço para remoção.
-- `movie`: referência ao filme relacionado.
-- `watchlist`: referência à watchlist relacionada.
-
-Dessa forma, o cliente pode descobrir as operações disponíveis por meio dos links retornados pela própria API, reduzindo a necessidade de conhecer previamente todas as rotas.
-
----
-
-## 🚦 9. Códigos de status HTTP
-
-A API utiliza os seguintes códigos de status para representar os resultados das requisições:
-
-| Código | Status | Descrição |
-|---|---|---|
-| 🟢 `200` | OK | Consulta ou atualização realizada com sucesso |
-| 🟢 `201` | Created | Recurso criado com sucesso. O cabeçalho `Location` informa sua URL |
-| 🟢 `204` | No Content | Recurso removido com sucesso, sem conteúdo na resposta |
-| 🟠 `400` | Bad Request | Dados inválidos, JSON malformado, parâmetros incorretos, versão inexistente ou regra de negócio violada |
-| 🟠 `401` | Unauthorized | Chave de API ausente ou inválida na versão 2 |
-| 🟠 `403` | Forbidden | Origem não autorizada pelo CORS |
-| 🟠 `404` | Not Found | Recurso não encontrado |
-| 🟠 `405` | Method Not Allowed | Método HTTP não permitido para a rota |
-| 🟠 `409` | Conflict | Registro duplicado ou ainda em uso |
-| 🟠 `415` | Unsupported Media Type | Corpo enviado sem o formato `application/json` |
-| 🟠 `422` | Unprocessable Entity | Chave de idempotência reutilizada com um corpo diferente |
-| 🟠 `429` | Too Many Requests | Limite de requisições excedido |
-| 🔴 `500` | Internal Server Error | Erro inesperado durante o processamento da requisição |
-
-### Formato padrão das respostas de erro
-
-Todas as respostas de erro seguem o mesmo formato:
-
-```json
-{
-  "timestamp": "2026-10-04T14:55:57",
-  "status": 404,
-  "errorMessage": "NOT_FOUND",
-  "message": "Filme não encontrado com o ID: 999",
-  "path": "/api/movies/999"
-}
-```
-
-### Erros de validação
-
-Nas respostas `400 Bad Request` relacionadas à validação, a API também disponibiliza a propriedade `errors`, contendo os detalhes dos campos inválidos.
-
-**Exemplo:**
-
-```json
-{
-  "timestamp": "2026-10-04T14:55:57",
-  "status": 400,
-  "errorMessage": "BAD_REQUEST",
-  "message": "Erro de validação: 2 problema(s) encontrado(s). Veja os detalhes em 'errors'.",
-  "path": "/api/users",
-  "errors": [
-    "email: O email deve ser um endereço válido",
-    "name: O nome não pode estar em branco"
-  ]
-}
-```
-
----
-
-## 📏 10. Regras de negócio
-
-A Cinelog API aplica regras de negócio para garantir a consistência dos dados e dos relacionamentos.
-
-| Recurso | Regra |
-|---|---|
-| **Gêneros** | O nome de um gênero não pode se repetir |
-| **Detalhes dos filmes** | Cada filme pode possuir, no máximo, um registro de detalhes |
-| **Watchlist** | O mesmo filme não pode aparecer duas vezes na mesma watchlist |
-| **Notas** | A nota, de 1 a 10, só pode ser informada quando o status do item for `VISTO` |
-| **Filmes** | Um filme que esteja associado a alguma watchlist não pode ser removido |
-| **Detalhes** | Ao remover um filme, seus detalhes são removidos junto |
-| **Usuários** | Um usuário que ainda possui watchlists não pode ser removido |
-| **Watchlists** | Ao remover uma watchlist, seus itens são removidos junto |
-
-### PUT e PATCH
-
-É importante entender a diferença entre os dois métodos:
-
-- **PUT:** substitui o recurso inteiro. Portanto, todos os campos devem ser enviados na requisição.
-- **PATCH:** permite atualizar parcialmente um recurso, enviando somente os campos que precisam ser alterados.
-
-Na Cinelog API, o endpoint `PATCH /movie-details/{id}` permite modificar apenas alguns campos dos detalhes de um filme.
-
----
-
-## 🚀 11. Como começar
-
-Para testar a API do zero, siga a sequência abaixo:
-
-| Ordem | Operação | Endpoint | Descrição |
-|---|---|---|---|
-| 1 | POST | `/genres` | Criar um gênero |
-| 2 | POST | `/movies` | Criar um filme e associá-lo aos gêneros |
-| 3 | POST | `/movie-details` | Adicionar os detalhes do filme |
-| 4 | POST | `/users` | Criar um usuário |
-| 5 | POST | `/watchlists` | Criar uma watchlist para o usuário |
-| 6 | POST | `/watchlist-items` | Adicionar o filme à watchlist |
-
-### Exemplo: criando um filme
-
-**Endpoint:**
-
-```http
-POST /api/movies
-```
-
-**Corpo da requisição:**
-
-```json
-{
-  "titulo": "Oppenheimer",
-  "anoLancamento": 2023,
-  "duracao": 180,
-  "classificacaoIndicativa": "16",
-  "genreIds": [1, 3]
-}
-```
-
-Nesse exemplo, um filme é cadastrado com título, ano de lançamento, duração, classificação indicativa e os identificadores dos gêneros associados.
-
----
-
-**Cinelog API — Documentação REST**
-
-Desenvolvida para catalogar filmes e gerenciar watchlists pessoais.
+                                ---
+
+                                ## 🗂️ Recursos e relacionamentos
+
+                                | | Recurso | Descrição | Relacionamento |
+                                |---|---|---|---|
+                                | 👤 | **Usuários** | Donos das watchlists | 1:N com Watchlists |
+                                | 🎭 | **Gêneros** | Categorias de filmes | N:N com Filmes |
+                                | 🎬 | **Filmes** | Catálogo principal | 1:1 com Detalhes |
+                                | 📋 | **Detalhes dos Filmes** | Sinopse, orçamento, país e idioma | 1:1 com Filme |
+                                | 📺 | **Watchlists** | Listas pessoais de cada usuário | 1:N com Itens |
+                                | 🎞️ | **Itens da Watchlist** | Um filme dentro de uma lista, com status e nota | N:1 com Filme |
+
+                                **Visão geral do modelo:**
+
+                                ```
+                                👤 Usuário → 📺 Watchlist → 🎞️ Item → 🎬 Filme → 📋 Detalhes
+                                                                       ↕
+                                                                    🎭 Gênero
+                                ```
+
+                                ### 🏷️ Status de um item
+
+                                | Status | Significado | Aceita nota? |
+                                |---|---|---|
+                                | `QUERO_VER` | 📌 Está na lista para assistir depois | ❌ Não |
+                                | `VENDO` | ▶️ Em andamento | ❌ Não |
+                                | `VISTO` | ✅ Já assistido | ✅ Sim (1 a 10) |
+                                | `ABANDONADO` | 🚫 Desistiu no meio do caminho | ❌ Não |
+
+                                ---
+
+                                ## 📄 Paginação
+
+                                Os endpoints de listagem paginados aceitam os parâmetros abaixo:
+
+                                | Parâmetro | Descrição | Padrão |
+                                |---|---|---|
+                                | `page` | Número da página (a primeira é a `0`) | `0` |
+                                | `size` | Quantidade de itens por página | `20` |
+                                | `sort` | Campo e direção da ordenação | sem ordenação |
+
+                                ** Exemplo: ** `GET /api/movies?page=0&size=10&sort=titulo,asc`
+
+                                A resposta traz a lista de itens, as informações da página (`page`: `size`,
+                                `totalElements`, `totalPages` e `number`) e os links para navegar entre as páginas.
+
+                                ---
+
+                                ## 🔗 HATEOAS
+
+                                As respostas de sucesso com corpo incluem um bloco `_links` com as URLs que o cliente
+                                pode seguir a partir dali (por exemplo `self`, `update`, `delete`, `movie` e `watchlist`).
+                                Assim, **não é preciso conhecer todas as rotas de antemão**.
+
+                                ---
+
+                                ## 🚦 Códigos de status
+
+                                | | Código | Significado | Quando acontece |
+                                |---|---|---|---|
+                                | 🟢 | `200` | OK | Consulta ou atualização bem-sucedida |
+                                | 🟢 | `201` | Created | Recurso criado (o header `Location` traz a URL dele) |
+                                | 🟢 | `204` | No Content | Recurso removido, sem corpo de resposta |
+                                | 🟠 | `400` | Bad Request | Dados inválidos, JSON mal formado, parâmetro com tipo errado, `sort` com campo inexistente, versão da API inexistente ou regra de negócio violada |
+                                | 🟠 | `404` | Not Found | Recurso não encontrado |
+                                | 🟠 | `409` | Conflict | Registro duplicado ou ainda em uso |
+                                | 🟠 | `401` | Unauthorized | Chave de API ausente ou inválida (versão 2) |
+                                | 🟠 | `405` | Method Not Allowed | Método HTTP não aceito pela rota |
+                                | 🟠 | `415` | Unsupported Media Type | Corpo enviado sem ser `application/json` |
+                                | 🟠 | `422` | Unprocessable Entity | `X-Idempotency-Key` reutilizada com um corpo diferente |
+                                | 🟠 | `429` | Too Many Requests | Limite de requisições excedido (veja o `Retry-After`) |
+                                | 🔴 | `500` | Internal Server Error | Erro inesperado no servidor |
+                                | 🔴 | `503` | Service Unavailable | Banco de dados indisponível no momento (veja o `Retry-After`) |
+
+                                ### ❌ Formato dos erros
+
+                                Todos os erros retornam o mesmo formato:
+
+                                ```json
+                                {
+                                  "timestamp": "2026-10-04T14:55:57",
+                                  "status": 404,
+                                  "errorMessage": "NOT_FOUND",
+                                  "message": "Filme não encontrado com o ID: 999",
+                                  "path": "/api/movies/999"
+                                }
+                                ```
+
+                                Nos erros de **validação** (`400`) a resposta também traz a lista `errors`, com um item por campo inválido:
+
+                                ```json
+                                {
+                                  "timestamp": "2026-10-04T14:55:57",
+                                  "status": 400,
+                                  "errorMessage": "BAD_REQUEST",
+                                  "message": "Erro de validação: 2 problema(s) encontrado(s). Veja os detalhes em 'errors'.",
+                                  "path": "/api/users",
+                                  "errors": [
+                                    "email: O email deve ser um endereço válido",
+                                    "name: O nome não pode estar em branco"
+                                  ]
+                                }
+                                ```
+
+                                ---
+
+                                ## 📏 Regras de negócio importantes
+
+                                - 🎭 O nome de um **gênero** não pode se repetir.
+                                - 📋 Cada **filme** tem no máximo um registro de detalhes.
+                                - 🎞️ O mesmo filme não pode aparecer **duas vezes** na mesma watchlist.
+                                - ⭐ A **nota** (1 a 10) só pode ser informada quando o status do item é `VISTO`.
+                                - 🎬 Um filme que está em alguma watchlist **não pode ser removido**. Ao remover um filme,
+                                  os detalhes dele são removidos junto.
+                                - 👤 Um usuário que ainda possui watchlists **não pode ser removido**. Ao remover uma watchlist,
+                                  os itens dela são removidos junto.
+
+                                > ✏️ O `PUT` **substitui o recurso inteiro**: envie todos os campos.
+                                > Para alterar só alguns campos de um detalhe de filme, use `PATCH /movie-details/{id}`.
+
+                                ---
+
+                                ## 🚀 Como começar
+
+                                Para testar do zero, siga esta ordem:
+
+                                1. 🎭 Crie um gênero: `POST /genres`
+                                2. 🎬 Crie um filme com `genreIds`: `POST /movies`
+                                3. 📋 Adicione os detalhes do filme: `POST /movie-details`
+                                4. 👤 Use um dos usuários de exemplo (ids `1`, `2` e `3`) ou crie outro: `POST /users`
+                                5. 📺 Crie uma watchlist para o usuário: `POST /watchlists`
+                                6. 🎞️ Adicione o filme à lista: `POST /watchlist-items`
+
+                                **Exemplo rápido** — criando um filme:
+
+                                ```json
+                                {
+                                  "titulo": "Oppenheimer",
+                                  "anoLancamento": 2023,
+                                  "duracao": 180,
+                                  "classificacaoIndicativa": "16",
+                                  "genreIds": [1, 3]
+                                }
+                                ```
                                 """)
                         .license(new License()
                                 .name("MIT")

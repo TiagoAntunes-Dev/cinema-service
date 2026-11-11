@@ -10,12 +10,14 @@ import com.cinelog.api.Exception.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @Service: Indica que esta classe contém a lógica de negócios.
  * O Spring cria um "Bean" dessa classe e a deixa pronta para ser injetada no Controller.
  */
 @Service
+@Transactional
 public class UserService {
 
 
@@ -44,6 +46,7 @@ public class UserService {
     }
 
     // READ: Busca um usuário pelo ID
+    @Transactional(readOnly = true)
     public UserResponse getUserById(long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com o ID: " + id));
@@ -52,6 +55,7 @@ public class UserService {
     }
 
     // READ: Lista os usuários de forma PAGINADA (consistente com os outros services)
+    @Transactional(readOnly = true)
     public Page<UserResponse> getAllUsers(Pageable pageable) {
         return userRepository.findAll(pageable)
                 .map(this::toResponse);

@@ -15,11 +15,13 @@ import com.cinelog.api.Repository.WatchListRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * WatchlistItemService: regras de negócio dos itens (um filme dentro de uma watchlist, com status e nota).
  */
 @Service
+@Transactional
 public class WatchListItemService {
 
     private final WatchListItemRepository watchlistItemRepository;
@@ -60,6 +62,7 @@ public class WatchListItemService {
     }
 
     // READ: Busca um item pelo ID
+    @Transactional(readOnly = true)
     public WatchListItemResponse findById(long id) {
         WatchlistItem item = watchlistItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Item da watchlist não encontrado com o ID: " + id));
@@ -68,6 +71,7 @@ public class WatchListItemService {
     }
 
     // READ: Lista todos os itens de forma paginada
+    @Transactional(readOnly = true)
     public Page<WatchListItemResponse> findAll(Pageable pageable) {
         Page<WatchlistItem> items = watchlistItemRepository.findAll(pageable);
 
@@ -75,6 +79,7 @@ public class WatchListItemService {
     }
 
     // READ (consulta personalizada): itens de uma watchlist, com filtro opcional por status
+    @Transactional(readOnly = true)
     public Page<WatchListItemResponse> findByWatchList(long watchlistId, WatchStatus status, Pageable pageable) {
         if (!watchListRepository.existsById(watchlistId)) {
             throw new ResourceNotFoundException("Watchlist não encontrada com o ID: " + watchlistId);

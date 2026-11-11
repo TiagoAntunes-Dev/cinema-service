@@ -13,11 +13,13 @@ import com.cinelog.api.Repository.MovieRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * MovieDetailsService: regras de negócio dos detalhes de um filme (relacionamento 1:1 com Movie).
  */
 @Service
+@Transactional
 public class MovieDetailsService {
 
     private final MovieDetailsRepository movieDetailsRepository;
@@ -56,6 +58,7 @@ public class MovieDetailsService {
     }
 
     // READ: Busca os detalhes pelo ID dos detalhes
+    @Transactional(readOnly = true)
     public MovieDetailsResponse findById(long id) {
         MovieDetails details = movieDetailsRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Detalhes não encontrados com o ID: " + id));
@@ -64,6 +67,7 @@ public class MovieDetailsService {
     }
 
     // READ: Lista todos os detalhes de forma paginada
+    @Transactional(readOnly = true)
     public Page<MovieDetailsResponse> findAll(Pageable pageable) {
         Page<MovieDetails> detailsPage = movieDetailsRepository.findAll(pageable);
 
@@ -71,6 +75,7 @@ public class MovieDetailsService {
     }
 
     // READ (consulta personalizada): detalhes de filmes de um país de origem
+    @Transactional(readOnly = true)
     public Page<MovieDetailsResponse> findByCountry(String paisOrigem, Pageable pageable) {
         Page<MovieDetails> detailsPage = movieDetailsRepository.findByPaisOrigemContainingIgnoreCase(paisOrigem, pageable);
 
@@ -78,6 +83,7 @@ public class MovieDetailsService {
     }
 
     // READ (consulta personalizada): detalhes de um filme específico
+    @Transactional(readOnly = true)
     public MovieDetailsResponse findByMovieId(long movieId) {
         MovieDetails details = movieDetailsRepository.findByMovieId(movieId)
                 .orElseThrow(() -> new ResourceNotFoundException("Detalhes não encontrados para o filme com ID: " + movieId));
